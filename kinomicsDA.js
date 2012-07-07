@@ -7,8 +7,8 @@ JSON:function()
 	//Functions to fit the data
 	the.timeSeriesFunc = function( xVector, P )
 		{
-		//Yo + 1/[1/(k*[x-Xo])+1/Ymax]  P[0] = Yo P[1]=k, P[2]= Xo, p[3] = Ymax
-		return (P[0]+1/(1/(P[1]*(xVector[0]-P[2]))+1/P[3]));
+		//Yo + 1/[1/(k*[x-Xo])+1/Ymax]   P[0]=k, P[1]= Xo, p[2] = Ymax
+		return (1/(1/(P[0]*(xVector[0]-P[1]))+1/P[2]));
 		//return params[0]+1/(1/(params[1]*(xVector[0]-params[2]))+1/params[3]);
 		};
 	the.postWashFunc = function( xVector, params )
@@ -123,6 +123,7 @@ fitDataToCurves:function(samples, CurveToBeFit)
 				
 				//load the results into kinomics.barcodes
 				var results = JSON.parse(e.data);
+				
 				var barcode = results.shift(), peptide = results.shift(), type = results.shift();
 				var params = results[0]; var totalSSE = results[1];var R2 = results[2]; 
 				var data = the.barcodes[barcode].peptides[peptide][type];

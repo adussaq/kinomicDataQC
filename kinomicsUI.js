@@ -441,7 +441,7 @@ figureCreation:
 			}
 		
 		//Add the fit data
-		for( var xVal = 20; xVal< 96; xVal+=5 )
+		for( var xVal = 0; xVal< 96; xVal+=.5 )
 			{
 			plot.push([xVal,null,null,eq([xVal],params)]);
 			}
@@ -456,7 +456,7 @@ figureCreation:
 	        vAxis: {title: plot[0][1]},
 	        legend: 'none',
 	        seriesType: "scatter",
-	        series: {2: {type: "line", curveType: "function", enableInteractivity:false}}
+	        series: {2: {type: "line", enableInteractivity:false}}
 	    	}
 		
 		//Actual data to be listed
@@ -470,10 +470,10 @@ figureCreation:
 			"<li>"+ "Equation: "+
 			amdjs.doMathSrc("y(c)=y_0+{y_{max}·v_{i}·(c-c_0)}/{y_{max}+v_{i}·(c-c_0)}") + "</li>" +
 			"<li>"+"With parameters:<br/>" + 
-			indent+amdjs.doMathSrc( "v_{i}=" + Math.round(params[1]*100)/100 )+ "<br/>" +
-			indent+amdjs.doMathSrc( "c_0=" + Math.round(params[2]*100)/100 )+ "</li>" +
-			indent+amdjs.doMathSrc( "y_0=" + Math.round(params[0]*100)/100 )+ "<br/>" +
-			indent+amdjs.doMathSrc( "y_{max}=" + Math.round(params[3]*100)/100 )+ "<br/>" +
+			indent+amdjs.doMathSrc( "v_{i}=" + Math.round(params[0]*100)/100 )+ "<br/>" +
+			indent+amdjs.doMathSrc( "c_0=" + Math.round(params[1]*100)/100 )+ "</li>" +
+			//indent+amdjs.doMathSrc( "y_0=" + Math.round(params[0]*100)/100 )+ "<br/>" +
+			indent+amdjs.doMathSrc( "y_{max}=" + Math.round(params[2]*100)/100 )+ "<br/>" +
 			"</ul>"
 			);
 			

@@ -44,7 +44,7 @@ fmincon:function(fun, x0, X, y, options)
 		}
 	else if( typeof options.maxItt == undefined )
 		{
-		options.maxItt = 10000;	
+		options.maxItt = 1000;	
 		}
 		
 		

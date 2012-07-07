@@ -348,13 +348,7 @@ fitData:function(data)
 		xIni = plot.cycleN;
 		yIni = plot.number;
 		iIni = plot.goodData;
-		func = kinomicsActiveData.JSON.timeSeriesFunc;
-		var Xmax = amdjs.Arr_max(xIni);
-		var Xmin = amdjs.Arr_min(xIni);
-		var Ymax = amdjs.Arr_max(yIni);
-		var Ymin = amdjs.Arr_min(yIni);
-		//P[0] = Yo P[1]=k, P[2]= Xo, p[3] = Ymax
-		params =  [-10, Ymin/32, -10, 3500];
+		func = kinomicsActiveData.JSON.timeSeriesFunc;		
 		}
 	else{return;}
 
@@ -374,6 +368,28 @@ fitData:function(data)
 			x1.push([Number(x)]);
 			}
 		}
+	
+	if( type == "timeSeries" )
+		{
+		var Xmax = amdjs.Arr_max(x1);
+		var Ymax = amdjs.Arr_max(y1);
+		var Ymin = amdjs.Arr_min(y1);
+		//P[0] = Yo P[1]=k, P[2]= Xo, p[3] = Ymax
+		var x1s = amdjs.clone(x1);
+		x1s=x1s.sort();
+		
+		var xx0 =x1s.shift();
+		xx0=xx0[0];
+		var yy0 =Number(yIni[xIni.indexOf(JSON.stringify(xx0))]);
+		
+		var Ym=Ymax;
+		var vi=Ymax/5;
+		var c = Ymax*yy0/(vi*(Ymin-Ymax))+xx0;
+		
+		params =  [vi, c, Ym];
+
+		}
+
 	
 	var results = amdjs.fmincon(func,params,x1,y1);
 	
