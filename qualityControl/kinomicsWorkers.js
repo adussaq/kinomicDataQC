@@ -340,6 +340,7 @@ fitData:function(data)
 		var Xmin = amdjs.Arr_min(xIni);
 		var Ymax = amdjs.Arr_max(yIni);
 		var Ymin = amdjs.Arr_min(yIni);
+		if( Ymin == 0 ) {Ymin=10;}
 		// y=mx+b
 		params= [Ymin/Xmin,10];
 		}
@@ -379,13 +380,25 @@ fitData:function(data)
 		x1s=x1s.sort();
 		
 		var xx0 =x1s.shift();
-		xx0=xx0[0];
+		var xxN = x1s.pop();
+		//Because it is an array of arrays
+		xx0=xx0[0];xxN=xxN[0];
 		var yy0 =Number(yIni[xIni.indexOf(JSON.stringify(xx0))]);
+		var yyN =Number(yIni[xIni.indexOf(JSON.stringify(xxN))]);
+		var Ym, vi, c;
 		
-		var Ym=Ymax;
-		var vi=Ymax/5;
-		var c = Ymax*yy0/(vi*(Ymin-Ymax))+xx0;
-		
+		//Deal with overall negative values
+		if( (yyN-yy0)/(xxN-xx0) < 0 )
+			{
+			Ym=Ymin;
+				
+			}
+		else
+			{
+			Ym=Ymax;
+			}
+		vi=Ym/5;
+		c = Ymax*yy0/(vi*(Ymin-Ymax))+xx0;
 		params =  [vi, c, Ym];
 
 		}
@@ -413,7 +426,10 @@ self.addEventListener('message', function(e)
 	
 	//This is a call to convert as a flat file
 	if( myFunc == "getFileFromFlat" ) 
-		{kinomicsImportDA.flatFileAnalysis.cleanAndSplitFile(myData);}
+		{
+		importScripts("amdjs.js");
+		kinomicsImportDA.flatFileAnalysis.cleanAndSplitFile(myData);
+		}
 	
 	//This is a call to fit the data to curves
 	if( myFunc == "fitData" ) 

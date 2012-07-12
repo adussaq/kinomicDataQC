@@ -36,7 +36,7 @@ fileImporter:function(fileName)
 	var sendToWorker = function( fileObj )
 		{
 		//Create worker
-		var worker = new Worker("kinomicsWorkers.js");
+		var worker = new Worker("qualityControl/kinomicsWorkers.js");
 	
 		//Add call back
 		worker.addEventListener('message', function(e)
@@ -109,7 +109,7 @@ fitDataToCurves:function(samples, CurveToBeFit)
 		if( currentlyOn < maximumOn && commands.length > 0 )
 			{
 			currentlyOn++;
-			var worker = new Worker("kinomicsWorkers.js");
+			var worker = new Worker("qualityControl/kinomicsWorkers.js");
 			worker.addEventListener('message', function(e)
 				{
 				//Kill the worker
@@ -155,7 +155,7 @@ fitDataToCurves:function(samples, CurveToBeFit)
 fitDataToSingleCurve:function(command, callback, callbackArg)
 	{
 	var the = kinomicsActiveData.JSON
-	var worker = new Worker("kinomicsWorkers.js");
+	var worker = new Worker("qualityControl/kinomicsWorkers.js");
 	worker.addEventListener('message', function(e)
 		{
 		//Kill the worker
