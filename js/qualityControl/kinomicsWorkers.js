@@ -1,3 +1,4 @@
+//'use strict';
 /////////////////////////////////////////////////////////////////////////////////////////
 // I would recommend using a text editor with collapsable tabs for viewing these...    //
 // There are a lot of functions here.												   //
@@ -11,7 +12,7 @@ kinomicsImportDA = {
 JSON:function() 
 	{
 	//Global access variables
-	kinomicsImportDA.JSON.triples = new String(); // List of triples for current import
+	kinomicsImportDA.JSON.triples = ""; // List of triples for current import
 	kinomicsImportDA.JSON.barcodes = new Object(); // List of active barcodes with all associated data
 	},
 
@@ -31,9 +32,9 @@ flatFileAnalysis:
 		//Global access variables
 		var the = kinomicsImportDA.flatFileAnalysis.JSON;
 		the.file = new Object(); // Entire file string for current import
-		the.bioNavVersion = new String(); // Bionavigator version for current import
-		the.protocolFileName = new String(); // Protocol file name for current import
-		the.dateAnalyized = new String(); // Date analysis was done for current import
+		the.bioNavVersion = ""; // Bionavigator version for current import
+		the.protocolFileName = ""; // Protocol file name for current import
+		the.dateAnalyized = ""; // Date analysis was done for current import
 		the.peptides = new Array();
 		the.metadata = new Array();
 		the.metaDataLocations = new Object();
@@ -340,6 +341,7 @@ fitData:function(data)
 		var Xmin = amdjs.Arr_min(xIni);
 		var Ymax = amdjs.Arr_max(yIni);
 		var Ymin = amdjs.Arr_min(yIni);
+		var max_variations = 8;
 		if( Ymin == 0 ) {Ymin=10;}
 		// y=mx+b
 		params= [Ymin/Xmin,10];
@@ -391,7 +393,6 @@ fitData:function(data)
 		if( (yyN-yy0)/(xxN-xx0) < 0 )
 			{
 			Ym=Ymin;
-				
 			}
 		else
 			{
@@ -400,15 +401,241 @@ fitData:function(data)
 		vi=Ym/5;
 		c = Ymax*yy0/(vi*(Ymin-Ymax))+xx0;
 		params =  [vi, c, Ym];
+		}
+
+	//Actually fit the line
+	var result = amdjs.fmincon(func,params,x1,y1);
+	
+	//Since the time series does not tend to fit well the below fixes that, this is only
+		//preformed if the wilcox test has a poor result
+	if( type == "timeSeries" && result[3]<0.4 )
+		{
+		var results = new Array();
+		results[0] = result;
+		//Vary the starting conditions to find better fit
+		/*
+		for( var ln = 0; ln < max_variations; ln++ )
+			{
+			var params2 = amdjs.clone(params);
+			for ( var ind in params2 )
+				{
+				params2[ind] = params2[ind] + 1.9*(Math.random()-.5)*params2[ind];
+				}
+			results[ln+1]=amdjs.fmincon(func,params2,x1,y1);
+			}*/
+	
+		var x2 = amdjs.clone(x1);
+		var y2 = amdjs.clone(y1);
+		var xi, yi;
+		//Remove each point, get new fit and test it
+		for( var point = 0; point<x1.length; point++ )
+			{
+			//Remove the first point
+			xi = x2.shift();
+			yi = y2.shift();
+			
+			//Fit the functions
+			var res = amdjs.fmincon(func,results[0],x2,y2);
+			
+			//Fit the original with the starting conditions from above
+			res[1] = amdjs.sqrSumOfErrors(func, x1, y1, res[0] );
+			results[point+1]=res;
+			
+			//To make this as quick as possible if we get an R^2>.995  
+				// or a poor mans test > 0.6 stop doing this
+			if( res[2]>=0.995 || res[3]>=0.6 )
+				{
+				break;
+				}
+			
+			//Add the point back to the arrays
+			x2.push(xi);
+			y2.push(yi);
+			
+			}
+
+		//This determines the best result
+		for( var ln = 0; ln < max_variations; ln++ )
+			{
+			if( results[ln+1][1]<result[1] )
+				{
+				result = results[ln+1];
+				}
+			}
+			
+		// As a final step run the fit one last time to fix any slight alterations that 
+		// need to take place
+		result = amdjs.fmincon(func,result[0],x1,y1);
+		
+		}
+	
+	
+	//Parse and post results
+	result = [barcode, peptide,type].concat(result);
+	self.postMessage(JSON.stringify(result));
+	}
+
+};
+
+//A copy of essential amdjs_1.0 functions for these routines
+amdjs = {
+
+// function for the calculation of error
+sqrSumOfErrors:function(fun, X, y, x0)
+		{
+		var error = 0;
+		for( var i in X )
+			{
+			error += Math.pow(fun(X[i], x0)-y[i],2);
+			}
+		return error;
+		},
+//My attempt at curve fitting. Should be generalizable to multiple x dimensions, although
+	// I have not done significant testing.
+fmincon:function(fun, x0, X, y, options)
+	{
+	//Options must be entered as an object
+	// Very loosely based on fmincon:function(fun,x0,A,b,Aeq,beq,lb,ub,nonlcon,options)
+		// from matlab
+
+
+	// Used to calculate total deviations squared from the mean
+	var sqrSumOfDeviations = function(y)
+		{
+		var error = 0;
+		var avg = amdjs.Arr_avg(y);
+		for( var i in X )
+			{
+			error += Math.pow(avg-y[i],2);
+			}
+		return error;
+		};
+	
+	
+	//Set the options
+	var options = new Object();
+	options.step = x0.map(function(s){return s/100;})
+	options.maxItt = 1000;	
+	options.minPer = 1e-6;
+	
+	var lastItter = Infinity;
+	var count = 0;
+		
+	for( itt = 0; itt<options.maxItt; itt++ )
+		{
+		var x1 = amdjs.clone(x0)
+		for( parI in x1 )
+			{
+			x1[parI]+=options.step[parI];
+			if( amdjs.sqrSumOfErrors(fun, X,y,x1)<amdjs.sqrSumOfErrors(fun, X,y,x0) )
+				{
+				x0[parI]=x1[parI];
+				options.step[parI]*=1.2;
+				}
+			else
+				{
+				options.step[parI]*=-0.5;
+				}
+			} 
+		var sse = amdjs.sqrSumOfErrors(fun, X,y,x0);
+		
+		//barcode631030102_well1 10_1_RB_804_816
+		//make it so it checks every 3 rotations for end case
+		if( count > 3 )
+			{
+			if( Math.abs( 1- sse/lastItter )< options.minPer )
+				{
+				break;
+				}
+			lastItter = sse;
+			count = -1;
+			}
+		count++;
 
 		}
 
 	
-	var results = amdjs.fmincon(func,params,x1,y1);
+	//I added the following 'R^2' like calculation. It is not included in fmincon, but
+		// is useful for my needs.
+		var SSDTot = sqrSumOfDeviations(y);
+		var SSETot = amdjs.sqrSumOfErrors(fun, X, y, x0);
+		var corrIsh = 1-SSETot/SSDTot;
 	
-	//Parse and post results
-	results = [barcode, peptide,type].concat(results);
-	self.postMessage(JSON.stringify(results));
+	//I also added a wilcox test to this so we can determine the goodness of fit in 
+		// another manner	
+	var yCMP = new Array();
+	X.map(function(xVal){return yCMP.push(fun(xVal,x0))});
+	var WilcoxTest = amdjs.lookAtRes(y,yCMP);
+	var SSETot = amdjs.sqrSumOfErrors(fun, X, y, x0);
+	return [amdjs.clone(x0), SSETot,corrIsh, WilcoxTest];
+	},
+
+lookAtRes:function( arr1, arr2 )
+	{
+	var val=0;
+	var res1 = new Array();
+	for( var ind in arr1 ) {res1[ind] = arr1[ind]-arr2[ind];}
+	var res2 = amdjs.clone(res1);
+	res2.shift();
+	for( var ind in res2 )
+		{
+		if( res2[ind]*res1[ind] > 0 ){val++}
+		}
+	return 1-val/arr2.length;
+	},
+
+//Minimum of an array
+Arr_min:function(A)
+	{
+	return Math.min.apply(null, A)
+	},
+
+//Maximum of an array
+Arr_max:function(A)
+	{
+	return Math.max.apply(null, A)
+	},
+
+//Finds the sum of an array
+sum:function(x)
+	{ //Stole this one from Jonas :-)
+	if(Array.isArray(x[0])){return x.map(function(xi){return jmat.sum(xi)})}
+	else{return x.reduce(function(a,b){return a+b})};
+	},
+
+//clone object without functional elements
+clone:function(x)
+	{ 
+	return JSON.parse(JSON.stringify(x))
+	},
+	
+//Average an array
+Arr_avg:function(A)
+	{ 
+	return amdjs.sum(A)/A.length;
+	}
+
+};
+
+//A copy of essential variables/equations
+kinomicsActiveData = {
+JSON:function() 
+	{
+	var the = kinomicsActiveData.JSON;
+	
+	//Functions to fit the data
+	the.timeSeriesFunc = function( xVector, P )
+		{
+		//Yo + 1/[1/(k*[x-Xo])+1/Ymax]   P[0]=k, P[1]= Xo, p[2] = Ymax
+		//if( xVector[0] < P[1] ) {return 0;}
+		return (1/(1/(P[0]*(xVector[0]-P[1]))+1/P[2]));
+		//return params[0]+1/(1/(params[1]*(xVector[0]-params[2]))+1/params[3]);
+		};
+	the.postWashFunc = function( xVector, params )
+		{
+		//Y = mx+b, params[0]=m, parmas[1]=b
+		return params[0]*xVector[0]+params[1];
+		}	
 	}
 
 };
@@ -416,6 +643,7 @@ fitData:function(data)
 
 //In order for any of these globals to work I have to initialize them here
 kinomicsImportDA.JSON();
+kinomicsActiveData.JSON();
 kinomicsImportDA.flatFileAnalysis.JSON(); //Depreciated
 
 self.addEventListener('message', function(e) 
@@ -427,15 +655,14 @@ self.addEventListener('message', function(e)
 	//This is a call to convert as a flat file
 	if( myFunc == "getFileFromFlat" ) 
 		{
-		importScripts("amdjs.js");
 		kinomicsImportDA.flatFileAnalysis.cleanAndSplitFile(myData);
 		}
 	
 	//This is a call to fit the data to curves
 	if( myFunc == "fitData" ) 
 		{
-		importScripts("amdjs.js");
-		importScripts("kinomicsDA.js");
+// 		importScripts("kinomicsDA.js");
 		kinomicsImportDA.fitData(JSON.parse(myData));
 		}
 	}, false);
+	

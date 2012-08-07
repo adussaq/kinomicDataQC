@@ -1,3 +1,4 @@
+//'use strict';
 kinomicsActiveData = {
 JSON:function() 
 	{
@@ -8,6 +9,7 @@ JSON:function()
 	the.timeSeriesFunc = function( xVector, P )
 		{
 		//Yo + 1/[1/(k*[x-Xo])+1/Ymax]   P[0]=k, P[1]= Xo, p[2] = Ymax
+		//if( xVector[0] < P[1] ) {return 0;}
 		return (1/(1/(P[0]*(xVector[0]-P[1]))+1/P[2]));
 		//return params[0]+1/(1/(params[1]*(xVector[0]-params[2]))+1/params[3]);
 		};
@@ -15,8 +17,9 @@ JSON:function()
 		{
 		//Y = mx+b, params[0]=m, parmas[1]=b
 		return params[0]*xVector[0]+params[1];
-		}
-	//Functions to fit the data as strings	
+		};
+	
+	the.workersLocation = "js/qualityControl/kinomicsWorkers.js";
 		
 	},
 
@@ -28,6 +31,7 @@ workers = {
 //This worker imports files
 fileImporter:function(fileName)
 	{
+	var the = kinomicsActiveData.JSON;
 	//Define my non global functions
 	var getFile = function( file )
 		{
@@ -36,7 +40,7 @@ fileImporter:function(fileName)
 	var sendToWorker = function( fileObj )
 		{
 		//Create worker
-		var worker = new Worker("qualityControl/kinomicsWorkers.js");
+		var worker = new Worker(the.workersLocation);
 	
 		//Add call back
 		worker.addEventListener('message', function(e)
@@ -69,6 +73,7 @@ fitDataToCurves:function(samples, CurveToBeFit)
 	{
 	if( typeof CurveToBeFit == undefined || !CurveToBeFit.match(/all|timeSeries|postWash/) ){CurveToBeFit="all";}
 	var the = kinomicsActiveData.JSON
+	
 	//Vars for running the slider bar
 	var total=0, count=0, bar, percentFinished = 0;
 	//Vars for running the looping to answer the functions
@@ -109,7 +114,7 @@ fitDataToCurves:function(samples, CurveToBeFit)
 		if( currentlyOn < maximumOn && commands.length > 0 )
 			{
 			currentlyOn++;
-			var worker = new Worker("qualityControl/kinomicsWorkers.js");
+			var worker = new Worker(the.workersLocation);
 			worker.addEventListener('message', function(e)
 				{
 				//Kill the worker
@@ -125,12 +130,13 @@ fitDataToCurves:function(samples, CurveToBeFit)
 				var results = JSON.parse(e.data);
 				
 				var barcode = results.shift(), peptide = results.shift(), type = results.shift();
-				var params = results[0]; var totalSSE = results[1];var R2 = results[2]; 
+				var params = results[0]; var totalSSE = results[1];var R2 = results[2];
 				var data = the.barcodes[barcode].peptides[peptide][type];
 				
 				data.parameters = params;
 				data.R2 = R2;
 				data.totalSqrErrors = totalSSE;
+				data.wilcox = results[3];
 				
 				//Reset the loop
 				currentlyOn--;
@@ -155,7 +161,7 @@ fitDataToCurves:function(samples, CurveToBeFit)
 fitDataToSingleCurve:function(command, callback, callbackArg)
 	{
 	var the = kinomicsActiveData.JSON
-	var worker = new Worker("qualityControl/kinomicsWorkers.js");
+	var worker = new Worker(the.workersLocation);
 	worker.addEventListener('message', function(e)
 		{
 		//Kill the worker
@@ -170,7 +176,8 @@ fitDataToSingleCurve:function(command, callback, callbackArg)
 		data.parameters = params;
 		data.R2 = R2;
 		data.totalSqrErrors = totalSSE;
-				
+		data.wilcox = results[3];
+		
 		//Call Next Function
 		callback(callbackArg);
 		},false);

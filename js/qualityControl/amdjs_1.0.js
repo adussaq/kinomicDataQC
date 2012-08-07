@@ -38,15 +38,20 @@ fmincon:function(fun, x0, X, y, options)
 		options.step = x0.map(function(s){return s/100;});	
 		options.maxItt = 1000;
 		}
-	else if( typeof options.step == undefined )
+	if( typeof options.step == undefined )
 		{
 		options.step = x0.map(function(s){return s/100;});	
 		}
-	else if( typeof options.maxItt == undefined )
+	if( typeof options.maxItt == undefined )
 		{
 		options.maxItt = 1000;	
 		}
-		
+	if( typeof options.minPer == undefined )
+		{
+		options.minPer = 1e-6;
+		}	
+	
+	var lastItter = Infinity;
 		
 	for( itt = 0; itt<options.maxItt; itt++ )
 		{
@@ -64,6 +69,12 @@ fmincon:function(fun, x0, X, y, options)
 				options.step[parI]*=-0.5;
 				}
 			} 
+		var sse = sqrSumOfErrors(fun, X,y,x0);
+		if( Math.abs( 1- sse/lastItter )< options.minPer )
+			{
+			break;
+			}
+		lastItter = sse;
 		}
 	//I added the following 'R^2' like calculation. It is not included in fmincon, but
 		// is useful for my needs.
@@ -88,8 +99,8 @@ fmincon:function(fun, x0, X, y, options)
 	},
 
 refresh:function(){return ""},
-//Minimum of an array
 
+//Minimum of an array
 Arr_min:function(A)
 	{
 	return Math.min.apply(null, A)
