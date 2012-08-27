@@ -28,17 +28,11 @@ JSON:function()
 
 //This series of functions call the workers in kinomicsWorkers.js
 workers = {
-//This worker imports files
-fileImporter:function(fileName)
-	{
-	var the = kinomicsActiveData.JSON;
-	//Define my non global functions
-	var getFile = function( file )
+
+//This sends the 'got' file to a worker for analysis
+fileImporter_sendToWorker:function( fileObj )
 		{
-		$.get(file).success(function(result) {sendToWorker(result)});
-		};
-	var sendToWorker = function( fileObj )
-		{
+		var the = kinomicsActiveData.JSON;
 		//Create worker
 		var worker = new Worker(the.workersLocation);
 	
@@ -59,8 +53,18 @@ fileImporter:function(fileName)
 	
 		//Get worker started (use a function string command found at the bottom of kinomicsWorkers.js
 		worker.postMessage( JSON.stringify(["getFileFromFlat",fileObj]) );
-		}
-		
+	},
+
+
+//This worker imports files
+fileImporter:function(fileName)
+	{
+	var the = kinomicsActiveData.JSON;
+	//Define my non global functions
+	var getFile = function( file )
+		{
+		$.get(file).success(function(result) {workers.fileImporter.sendToWorker(result)});
+		};
 	//Actually start the process
 	getFile(fileName);
 	},

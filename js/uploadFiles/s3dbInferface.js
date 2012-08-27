@@ -1,4 +1,4 @@
-s3dbUI = {
+/*s3dbUI = {
 
 JSON:function()
 	{
@@ -55,7 +55,7 @@ changeTable:function(CID)
 			        )
 		);*/
 	
-	$("#fileupload").attr('action', page +'/multiupload.php?key='+s3dbfu.apikey()+'&collection_id='+CID+'&rule_id='+s3dbfu.ruleid()+'&format=json');
+	/*$("#fileupload").attr('action', page +'/multiupload.php?key='+s3dbfu.apikey()+'&collection_id='+CID+'&rule_id='+s3dbfu.ruleid()+'&format=json');
     
 	// Load S3DB's existing files for the specified collection:
 	/*$('#fileupload').each(function () 
@@ -87,7 +87,7 @@ changeTable:function(CID)
 		
 		});*/
 	
- 	},
+/* 	},
 
 tableLoadCallback:function(e,data)
 	{
@@ -142,4 +142,31 @@ addToTableMin:function()
 }
 s3dbUI.collectionSelection();
 s3dbUI.JSON();
+*/
+//This actually runs at the load of jquery? But set here for s3db login/fileupload options
+$(function()
+	{
+	'use strict';
+	// Initialize the jQuery File Upload widget:
+	$('#fileupload').fileupload();
+	// Enable iframe cross-domain access via redirect option:
+	$('#fileupload').fileupload
+		(
+		//{done: function(e,data){s3dbUI.tableLoadCallback(e,data);}},
+		'option',
+		'redirect',
+		window.location.href.replace(/\/[^\/]*$/,'/cors/result.html?%s')
+		);
+			
+	//S3DB File Upload Stuff
+	var data = 
+		{
+		's3dburl':'http://204.232.200.16/uabs3db',
+		'collectionid':'89',
+		'ruleid':'99',
+		'spinnertext':' working...',
+		};
+	s3dbfu.init(data);
+	});
+	
 

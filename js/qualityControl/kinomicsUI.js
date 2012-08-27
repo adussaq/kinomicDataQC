@@ -628,7 +628,9 @@ figureCreation:
 	        {
 	        title: "Time Series",
 	        hAxis: {title: plot[0][0],
-	        		viewWindowMode:'explicit',viewWindow:{max:100,min:30}},
+	        		viewWindowMode:'explicit',
+	        		viewWindow:{max:100,min:30}
+	        		},
 	        vAxis: {title: plot[0][1]},
 	        legend: 'none',
 	        seriesType: "scatter",

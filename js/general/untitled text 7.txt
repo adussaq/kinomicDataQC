@@ -1,0 +1,16 @@
+POST https://www.googleapis.com/fusiontables/v1/tables?key=AIzaSyBjXKVpOKsYQd7DSzWRzQEVY0c7kiDJa4M&access_token=ya29.AHES6ZQpxYDqhY9-mV8ke8EDkZPvMRC_LjCdA9PSRPRlBlE
+
+Content-Type: application/json
+
+$.post( 'https://www.googleapis.com/fusiontables/v1/tables?key=AIzaSyBjXKVpOKsYQd7DSzWRzQEVY0c7kiDJa4M&access_token=ya29.AHES6ZQpxYDqhY9-mV8ke8EDkZPvMRC_LjCdA9PSRPRlBlE',
+	{"name": "Insects","columns": [{"name": "Species","type": "STRING"},{"name": "Elevation","type": "NUMBER"},{"name": "Year","type": "DATETIME"}], "description": "Insect Tracking Information.", "isExportable": true},
+	function(e){console.log(e)});
+	
+$.ajax
+	({ 
+	type: 'POST',
+	url:'https://www.googleapis.com/fusiontables/v1/tables?key=AIzaSyBjXKVpOKsYQd7DSzWRzQEVY0c7kiDJa4M&access_token=ya29.AHES6ZQpxYDqhY9-mV8ke8EDkZPvMRC_LjCdA9PSRPRlBlE',
+	data: {"name": "Insects","columns": [{"name": "Species","type": "STRING"},{"name": "Elevation","type": "NUMBER"},{"name": "Year","type": "DATETIME"}], "description": "Insect Tracking Information.", "isExportable": true},
+	dataType: 'json',
+	success: function(e){console.log(e)}
+	});
