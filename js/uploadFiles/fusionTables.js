@@ -305,6 +305,8 @@ queryTable:function(tableID, queryParams, callback){}
 							barObject[bar] = JSON.parse(res.rows[rowNum][1]);
 							barObject[bar].db.looked = true;
 							barcodesFound.push(bar);
+							kinomicsImportUI.buttons.fitCurves();
+							
 							}
 						kinomicsImportUI.peptideTableViewer.addBarcodesToTable(barcodesFound);
 						}
