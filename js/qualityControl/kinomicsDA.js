@@ -30,7 +30,7 @@ JSON:function()
 workers = {
 
 //This sends the 'got' file to a worker for analysis
-fileImporter_sendToWorker:function( fileObj )
+fileImporter_sendToWorker:function( fileObj, additionalObj, callback )
 		{
 		var the = kinomicsActiveData.JSON;
 		//Create worker
@@ -44,10 +44,18 @@ fileImporter_sendToWorker:function( fileObj )
 		
 			//Update active barcodes
 			var result = JSON.parse(e.data);
-			for (var attrname in result) { kinomicsActiveData.JSON.barcodes[attrname] = result[attrname]; }
+			for (var attrname in result) 
+				{
+				kinomicsActiveData.JSON.barcodes[attrname] = result[attrname]; 
+				kinomicsActiveData.JSON.barcodes[attrname].db = amdjs.clone(additionalObj);
+				}
 			
-			//Update UI!
-			kinomicsImportUI.buttons.fitCurves();
+			//Update UI to allow user to begin fitting curves - removed to be more finely
+			//  controlled, should be preformed by the callback
+			//kinomicsImportUI.buttons.fitCurves();
+			
+			//Callback
+			callback();
 			
 			},false);
 	
@@ -63,7 +71,7 @@ fileImporter:function(fileName)
 	//Define my non global functions
 	var getFile = function( file )
 		{
-		$.get(file).success(function(result) {workers.fileImporter.sendToWorker(result)});
+		$.get(file).success(function(result) {workers.fileImporter_sendToWorker(result)});
 		};
 	//Actually start the process
 	getFile(fileName);
@@ -77,6 +85,7 @@ fitDataToCurves:function(samples, CurveToBeFit)
 	{
 	if( typeof CurveToBeFit == undefined || !CurveToBeFit.match(/all|timeSeries|postWash/) ){CurveToBeFit="all";}
 	var the = kinomicsActiveData.JSON
+	var barcodesAnalyzed = [];
 	
 	//Vars for running the slider bar
 	var total=0, count=0, bar, percentFinished = 0;
@@ -86,13 +95,15 @@ fitDataToCurves:function(samples, CurveToBeFit)
 	
 		
 	//Create and show the bar
-	$('<div/>', {class:"progress progress-striped active", id: "fittingBarContainer"}).appendTo($('#barSpot'));
-	var bar = $('<div/>', {class:"bar", style:"width: 0%", id:"bar"})
-	bar.appendTo('#fittingBarContainer');
+	var barContainer = $('<div/>', {class:"progress progress-striped active", id: "fittingBarContainer"}).appendTo('#barSpot');
+	var bar = $('<div/>', {class:"bar", style:"width: 0%", id:"bar"}).appendTo(barContainer);
 
 	//Initialize my list of commands to run
 	for( var barcode in samples )
 		{
+		if( the.barcodes[barcode].db.fit == true) {continue};
+		barcodesAnalyzed.push(barcode);
+		the.barcodes[barcode].db.fit = true
 		for ( var peptide in samples[barcode].peptides )
 			{
 			if( CurveToBeFit == "all" )
@@ -111,7 +122,7 @@ fitDataToCurves:function(samples, CurveToBeFit)
 			}
 		}	
 	total = commands.length;
-	
+	var lalacount = 0;
 	//function that actually runs the program
 	loop = function()
 		{
@@ -153,9 +164,19 @@ fitDataToCurves:function(samples, CurveToBeFit)
 		else if( commands.length == 0 && ! finished && percentFinished==100 )
 			{
 			finished = true;
+			kinomicsImportUI.peptideTableViewer.addBarcodesToTable(barcodesAnalyzed);
+
+			//Finalize the loading bar
 			bar.width(100+'%');
-			$('#fittingBarContainer').removeClass("active");
-			kinomicsImportUI.startTable();
+			barContainer.removeClass("active").hide();
+			
+			//Adds data to the fusion table object - this can occur after the data has been
+				//displayed, it should run in the background no problem... Just make sure
+				//the save button shows up after this is done.
+			fileUpload.sendBarcodesToDB(barcodesAnalyzed,fileUpload.showSaveDataButton);
+			
+
+			
 			}
 		}
 	loop();

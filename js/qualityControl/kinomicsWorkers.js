@@ -54,6 +54,8 @@ flatFileAnalysis:
 		file = file.replace(/\n+$/g, "\n");
 		file = file.replace( /\n\n/g, "\n" );
 		file = file.replace(/\n\s+\n/g,"\n");
+		//get rid of quotation marks to help prevent downstream errors
+		file = file.replace(/"|'/g,"");
 		kinomicsImportDA.flatFileAnalysis.getHeaderInfo(file.split('\n'));
 		},	
 	

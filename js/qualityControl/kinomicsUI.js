@@ -16,10 +16,10 @@ setUpPage:function()
 	$('<div/>',{class:"container",id:"top"}).appendTo('#qualtityControl');
 	
 	//This contains the buttons themselves
-	$('<div/>',{class:"span5",id:"buttons"}).appendTo('#top');
+	$('<well/>',{class:"well span11",id:"buttons"}).appendTo('#top').hide();
 	
 	//The place for the bar
-	$('<div/>', {class:"3 offset 1", id: "barSpot"}).appendTo($('#top'));
+	$('<div/>', {class:"3 offset 1 span10", id: "barSpot"}).appendTo($('#buttons'));
 	
 	//The place for the table, figures, and figure info
 	$('<div/>', {class:"container", id:"superDiv"}).appendTo('#qualtityControl');
@@ -54,6 +54,8 @@ buttons:
 	//This function loads the first button
 	importFile:function()
 		{
+		//Left this here to make for easy enabling, but this tester file is no longer needed
+			//To add back in, remove .hide() below.
 		var but = $( '<button/>', {
 		class:'btn',
 		id: "importFileButton",
@@ -68,7 +70,7 @@ buttons:
 			$('#importFileButton').button('loading');
 			workers.fileImporter(tempfile);
 			});
-		but.appendTo('#buttons');
+		but.appendTo('#buttons').hide();
 		},
 	
 	//This function is called at the end of the previous buttons processes.
@@ -78,14 +80,19 @@ buttons:
 		$('#importFileButton').button('complete');
 		$('#importFileButton').unbind();
 		
+		//Hide default message, but show buttons well
+		$('#tempQCMessage').hide();
+		$('#buttons').show();
+		
 		//Create new button
 		var but = $( '<button/>', {
-		class:'btn',
+		class:'btn btn-primary',
 		id: "fitCurves",
 		'data-loading-text':'Fitting Data, this may take a while',
 		'data-complete-text':'Curves have been fitted',
 		text:'Fit Curves',
 		});
+		
 		//Give it functionality
 		but.click(function()
 			{
@@ -93,7 +100,14 @@ buttons:
 			$('#fitCurves').button('loading');
 			workers.fitDataToCurves(kinomicsActiveData.JSON.barcodes, "all");
 			});
-		but.appendTo('#buttons');
+		if( $('#fitCurves').length < 1 )
+			{
+			but.appendTo('#buttons');
+			}
+		else
+			{
+			$('#fitCurves').replaceWith(but);
+			}
 		}
 	},
 	
@@ -124,11 +138,11 @@ addSlideBar:function()
 
 startTable:function()
 	{
+	kinomicsImportUI.barcodeTableViewer.JSON.table=true;
 	var the = kinomicsImportUI.barcodeTableViewer.JSON; // For global variables
 	var funcBar = kinomicsImportUI.barcodeTableViewer;
 	var funcPep = kinomicsImportUI.peptideTableViewer;
-	the();
-	
+
 	$('#fitCurves').button('complete');
 	$('#fitCurves').unbind();
 	//loadButton3(); - for triples when I get there...
@@ -193,19 +207,22 @@ startTable:function()
 	//Begin adding the actual information
 	funcBar.showTable();
 	
+	//Set up the variables
+	kinomicsImportUI.peptideTableViewer.JSON.cPage = 1; //Here for the peptide table, only needs to be set once.
+		
 	},
 
 barcodeTableViewer:
 	{
-	JSON:function()
+	JSON:
 		{
-		var the = kinomicsImportUI.barcodeTableViewer.JSON;
-		the.barcodes = new Array();
-		the.idsPerPage = 10;
-		the.tableStop = 0;
-		the.pageStop = 1;
-		the.cPage = 1;
-		kinomicsImportUI.peptideTableViewer.JSON.cPage = 1; //Here for the peptide table, only needs to be set once.
+		barcodes:[],
+		idsPerPage:10,
+		tableStop:0,
+		pageStop:1,
+		cPage:1,
+		table:false,
+		demand:0
 		},
 		
 	showTable:function()
@@ -213,11 +230,9 @@ barcodeTableViewer:
 		var the = kinomicsImportUI.barcodeTableViewer.JSON; // The location of the global constants
 		var func = kinomicsImportUI.barcodeTableViewer;
 		
-		//Set up the variables
-		func.JSON();
-		
 		//Add all currently active barcodes to the table
-		for( var i in kinomicsActiveData.JSON.barcodes ){the.barcodes.push(i)}
+		//for( var i in kinomicsActiveData.JSON.barcodes ){the.barcodes.push(i)}
+		
 		the.barcodes = the.barcodes.sort();
 		the.tableStop = the.barcodes.length;
 		the.pageStop = Math.ceil(the.tableStop/the.idsPerPage);
@@ -306,6 +321,24 @@ peptideTableViewer:
 		the.currentInd = 0;
 		},
 	
+	addBarcodesToTable:function(barArr)
+		{
+		if(!kinomicsImportUI.barcodeTableViewer.JSON.table)
+			{
+			kinomicsImportUI.barcodeTableViewer.JSON.table=true;
+			kinomicsImportUI.startTable();
+			}
+		for(var ind in barArr)
+			{
+			barcode = barArr[ind];
+			if(kinomicsImportUI.barcodeTableViewer.JSON.barcodes.indexOf(barcode) <0)
+				{
+				kinomicsImportUI.barcodeTableViewer.JSON.barcodes.push(barcode);
+				}
+			}
+		kinomicsImportUI.barcodeTableViewer.showTable();
+		},	
+	
 	showTable:function(barcode)
 		{
 		var the = kinomicsImportUI.peptideTableViewer.JSON; // The location of the global constants
@@ -356,6 +389,7 @@ peptideTableViewer:
 		
 		for( var i = 0; i<the.idsPerPage; i++ )
 			{
+			if(pepList[the.peptides[startPlace+i]].timeSeries.R2 == undefined ) {i--;continue;}
 			if(startPlace+i<the.tableStop)
 				{
 				//Get R^2 and cmp value from sliderbar
@@ -665,6 +699,9 @@ figureCreation:
 	 		var point = chart.getSelection();
 	 		point=point[0];
 	 		
+	 		//Make it so we know to change the resultant
+	 		kinomicsActiveData.JSON.barcodes[the.currentBarcode].db.changed = true;
+	 		
 	 		//Change from good to bad
 	 		if( point && Number(point.column) == 1 )
 	 			{
@@ -763,6 +800,8 @@ figureCreation:
 	    	{
 	 		var point = chart.getSelection();
 	 		point=point[0];
+	 		
+	 		kinomicsActiveData.JSON.barcodes[the.currentBarcode].db.changed = true;
 	 		
 	 		//Change from good to bad
 	 		if( point && Number(point.column) == 1 )
