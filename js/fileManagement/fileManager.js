@@ -82,25 +82,26 @@ KINOMICS.fileManager = (function () {
 			throw "ParseFile error:  Must pass in a file, please pass in.";
 		}
 		reportError("Got herex...");
-		workers = workerObj.startWorkers({num_workers: 1, filename: workersFile, onError: reportErrorFromWorker});
-		reportError("Got herey...");
-		workers.submitJob(file, function (evt) {
-			//variable declarations
-			var prop;
+		workers = workerObj.startWorkers({num_workers: 1, filename: workersFile, onError: reportErrorFromWorker, callback: function () {
+			reportError("Got herey...");
+			workers.submitJob(file, function (evt) {
+				//variable declarations
+				var prop;
 
-			//what to do with results
-			for (prop in evt.data) {
-				if (evt.data.hasOwnProperty(prop)) {
-					barcodes[prop] = expandBarcodeWell(evt.data[prop]);
-					barcodes[prop].db =  JSON.parse(JSON.stringify(dbObj));
+				//what to do with results
+				for (prop in evt.data) {
+					if (evt.data.hasOwnProperty(prop)) {
+						barcodes[prop] = expandBarcodeWell(evt.data[prop]);
+						barcodes[prop].db =  JSON.parse(JSON.stringify(dbObj));
+					}
 				}
-			}
-		});
-		reportError("Got herez...");
-		workers.onComplete(function () {
-			workers.clearWorkers();
-			callback();
-		});
+			});
+			reportError("Got herez...");
+			workers.onComplete(function () {
+				workers.clearWorkers();
+				callback();
+			});
+		}});
 		reportError("Finished");
 	};
 
