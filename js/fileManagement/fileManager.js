@@ -82,8 +82,6 @@ KINOMICS.fileManager = (function () {
 			throw "ParseFile error:  Must pass in a file, please pass in.";
 		}
 
-		throw "Got here...";
-
 		workers = workerObj.startWorkers({num_workers: 1, filename: workersFile, onError: reportErrorFromWorker});
 
 		workers.submitJob(file, function (evt) {
@@ -98,11 +96,12 @@ KINOMICS.fileManager = (function () {
 				}
 			}
 		});
-
+		throw "Got herew...";
 		workers.onComplete(function () {
 			workers.clearWorkers();
 			callback();
 		});
+	throw "Got here...";
 	};
 
 	reportError = function (err) {
