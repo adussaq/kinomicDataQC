@@ -269,7 +269,7 @@ KINOMICS.workers = (function () {
 				workersArr[i][0].onerror = errorFunc;
 			}
 
-			return callback();
+			callback();
 		}());
 
 		//return lib
