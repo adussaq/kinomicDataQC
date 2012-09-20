@@ -102,7 +102,8 @@ KINOMICS.fileManager = (function () {
 	};
 
 	reportErrorFromWorker = function (err) {
-		reportError(err.message + err.lineno +err.filename);
+		err.message = err.message || err;
+		reportError(err.message + "In worker Package...");
 	};
 
 	run = function (func) {
