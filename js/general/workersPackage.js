@@ -69,12 +69,12 @@ KINOMICS.workers = (function () {
 			//Coerces into a number drops decimals if .000... 
 		filename = start_obj.filename;
 
-		reportError("got here x");
-
 		//Make sure workers are available
 		/*if (typeof Worker !== 'function') {
 			throw 'Workers are not available in this browser';
 		}*/
+
+		reportError("" + (typeof Worker) + JSON.stringify(Worker));
 
 		//Check Variable definitions
 		if (isNaN(numJobs) || numJobs !== parseInt(numJobs, 10)) {
@@ -90,7 +90,6 @@ KINOMICS.workers = (function () {
 		if (typeof filename !== 'string' || !filename.match(/\.js$/)) {
 			throw 'Must pass in a filename as a string for worker functionality';
 		}
-		reportError("got here y");
 		return createWorkerObj(start_obj);
 	};
 
@@ -251,7 +250,7 @@ KINOMICS.workers = (function () {
 				}
 			}
 		};
-reportError("got here z");
+
 		//Actually start the workers for this scope
 		(function () {
 			var callback, errorFunc, filename, numJobs, i;
@@ -272,7 +271,7 @@ reportError("got here z");
 				workersArr[i][0].onerror = errorFunc;
 			}
 		}());
-reportError("got here xx");
+
 		//return lib
 		return lib;
 	};

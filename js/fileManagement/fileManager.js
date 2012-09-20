@@ -81,9 +81,8 @@ KINOMICS.fileManager = (function () {
 		if (typeof workersFile !== 'string') {
 			throw "ParseFile error:  Must pass in a file, please pass in.";
 		}
-		reportError("Got herex...");
-		workers = workerObj.startWorkers({num_workers: 1, filename: workersFile, onError: reportErrorFromWorker});//, callback: function (workers) {
-		reportError("Got herey...");
+
+		workers = workerObj.startWorkers({num_workers: 1, filename: workersFile, onError: reportErrorFromWorker});
 		workers.submitJob(file, function (evt) {
 			//variable declarations
 			var prop;
@@ -96,13 +95,10 @@ KINOMICS.fileManager = (function () {
 				}
 			}
 		});
-		reportError("Got herez...");
 		workers.onComplete(function () {
 			workers.clearWorkers();
 			callback();
 		});
-	
-		reportError("Finished");
 	};
 
 	reportError = function (err) {
