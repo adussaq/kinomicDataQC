@@ -72,9 +72,9 @@ KINOMICS.workers = (function () {
 		reportError("got here x");
 
 		//Make sure workers are available
-		if (typeof Worker !== 'function') {
+		/*if (typeof Worker !== 'function') {
 			throw 'Workers are not available in this browser';
-		}
+		}*/
 
 		//Check Variable definitions
 		if (isNaN(numJobs) || numJobs !== parseInt(numJobs, 10)) {
