@@ -67,12 +67,52 @@
 							<li><a href="#fileUpload" data-toogle="tab" id="tag3">Files</a>
 
 							</li>
+							<!-- Login tablet/phone-->
+							<li class="hidden-desktop">
+								<nav class='btn-group'>
+									<!-- Title -->	
+									<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+										<i class="icon-user"></i> <span class="username">Login</span>
+										<span class="caret"></span>
+									</a>
+
+									<!-- Options -->
+									<ul id="user-access-options" class="dropdown-menu">
+										<li id='auth'><a href="javascript:fuse.authenticate(function(){});">Authenticate with Google Account</a>
+
+										</li>
+										<li class="divider"></li>
+										<li><a href="javascript:s3dbfu.showmodal('loginUN');void(0);">S3DB with User Name</a>
+
+										</li>
+										<li><a href="javascript:s3dbfu.showmodal('loginAK');void(0);">S3DB with API Key</a>
+
+										</li>
+									</ul>
+								</nav>
+							</li>
+							<!-- Choose Database Phone/Tablet-->
+							<li class="hidden-desktop">
+								<nav id="tableSwitch" class="btn-group">
+									<!-- Title -->
+									<button class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+										<span class="curData"></span>
+										<span class="caret"></span>
+									</button>
+									<!-- Options Phone/Tablet-->
+									<ul class="dropdown-menu">
+										<li><a href="javascript:fileUpload.setUploadToFUSE();">Fusion Tables</a></li>
+										<li><a href="javascript:fileUpload.setUploadToS3DB();">S3DB</a></li>
+									</ul>
+								</nav>
+							</li>
+
 						</ul>
-						<!-- Login -->
-						<nav class='btn-group pull-right'>
+						<!-- Login desktop-->
+						<nav class='btn-group pull-right visible-desktop'>
 							<!-- Title -->	
 							<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-								<i class="icon-user"></i> <span id="username">Login</span>
+								<i class="icon-user"></i> <span class="username">Login</span>
 								<span class="caret"></span>
 							</a>
 
@@ -90,11 +130,11 @@
 								</li>
 							</ul>
 						</nav>
-						<!-- Choose Database -->
-						<nav id="tableSwitch" class="btn-group pull-right">
+						<!-- Choose Database desktop-->
+						<nav id="tableSwitch" class="btn-group pull-right visible-desktop">
 							<!-- Title -->
 							<button class="btn dropdown-toggle pull-right" data-toggle="dropdown" href="#">
-								<span id="curData"></span>
+								<span class="curData"></span>
 								<span class="caret"></span>
 							</button>
 							<!-- Options -->

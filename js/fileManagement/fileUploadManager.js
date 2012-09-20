@@ -28,8 +28,8 @@ fileUpload =
 		{
 		$('.fileOpts').hide();
 		currentUpload.show();
-		$('#curData').text(menuText);
-		$('#username').html(nameText);
+		$('.curData').text(menuText);
+		$('.username').html(nameText);
 		};
 	
 	var FUSE_sendBarcodesToDB = function(barObject,callback)
