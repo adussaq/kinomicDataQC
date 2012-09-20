@@ -51,25 +51,36 @@ KINOMICS.fileManager = (function () {
 		//variable declarations
 		var barcodes, callback, dbObj, file, onerror, expandBarcodeWell, workers, workerObj, workersFile;
 
+		if (typeof input_obj !== 'object' || input_obj === null) {
+			throw "input_obj was not defined";
+		}
+
 		//variable definitions
-		barcodes = input_obj.barcodes;
-		callback = input_obj.callback;
+		barcodes = input_obj.barcodes || undefined;
+		callback = input_obj.callback || undefined;
 		dbObj = input_obj.database || undefined;
 		expandBarcodeWell = input_obj.barcodeCreator || undefined;
-		file = input_obj.file;
+		file = input_obj.file || undefined;
 		onerror = input_obj.onError || function (err) {reportError(err); };
-		workerObj = input_obj.workers;
-		workersFile = input_obj.workersfile;
+		workerObj = input_obj.workers || undefined;
+		workersFile = input_obj.workersfile || undefined;
 
 		//check user input
 		if (typeof callback !== 'function') {
 			throw "ParseFile error: Callback must be defined and a function.";
 		}
-
 		if (typeof dbObj !== 'object' || dbObj === null) {
 			throw "ParseFile error:  Must pass in a database object, please pass in.";
 		}
-		//TODO: Finish checking user input....
+		if (typeof expandBarcodeWell !== 'function') {
+			throw "ParseFile error:  Must pass in the function for creating barcode prototype.";
+		}
+		if (typeof workerObj !== 'object' || workerObj === null) {
+			throw "ParseFile error:  Must pass in a worker object, please pass in.";
+		}
+		if (typeof workersFile !== 'string') {
+			throw "ParseFile error:  Must pass in a file, please pass in.";
+		}
 
 		workers = workerObj.startWorkers({num_workers: 1, filename: workersFile, onError: reportErrorFromWorker});
 
