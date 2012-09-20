@@ -91,7 +91,7 @@ KINOMICS.workers = (function () {
 		return createWorkerObj(start_obj);
 	};
 
-	createWorkerObj = function ($start_obj) {
+	createWorkerObj = function (start_obj) {
 		//Declare local vars
 		var clearWorkers, finishFunction, jobsArray, lib, setFinishFunction,
 			startJob, startWorkers, submitJob, post_callback, workersArr;
@@ -250,7 +250,7 @@ KINOMICS.workers = (function () {
 		};
 
 		//Actually start the workers for this scope
-		(function (start_obj) {
+		(function () {
 			var callback, errorFunc, filename, numJobs, i;
 			callback = start_obj.callback !== undefined ?  start_obj.callback : function () {};
 			errorFunc = start_obj.onError !== undefined ? start_obj.onError : function (err) {reportError(err); };
@@ -266,11 +266,11 @@ KINOMICS.workers = (function () {
 					workersArr[i] = undefined;
 				}
 				workersArr[i] = [new Worker(filename), false];
-				workersArr[i].onerror = errorFunc;
+				workersArr[i][0].onerror = errorFunc;
 			}
 
 			return callback();
-		}($start_obj));
+		}());
 
 		//return lib
 		return lib;

@@ -1,4 +1,4 @@
-/*global KINOMICS: false, console: false */
+/*global KINOMICS, console, $*/
 //TODO: error reporting for user very important here, make a failed save a ! or a yeild sign.
 //TODO: change error so it only occurs on a barcode by barcode basis.
 
@@ -7,7 +7,7 @@ KINOMICS.fileManager = (function () {
 	'use strict';
 
 	//variable declarations
-	var lib, parseFile, run, reportError;
+	var lib, parseFile, run, reportError, reportErrorFromWorker;
 
 	//variable definitions
 	lib  = {};
@@ -71,7 +71,7 @@ KINOMICS.fileManager = (function () {
 		}
 		//TODO: Finish checking user input....
 
-		workers = workerObj.startWorkers({num_workers: 1, filename: workersFile});
+		workers = workerObj.startWorkers({num_workers: 1, filename: workersFile, onError: reportErrorFromWorker});
 
 		workers.submitJob(file, function (evt) {
 			//variable declarations
@@ -93,8 +93,16 @@ KINOMICS.fileManager = (function () {
 	};
 
 	reportError = function (err) {
-		return console.log("File Manager Error: " + err + "\nTo display more information for any" +
-			" function type <func_name> instead of <func_name>(...)");
+		$('<div/>', {'class': 'alert alert-error', html:
+			'<button type="button" class="close" data-dismiss="alert">×</button>' +
+			"File Manager Error: " + err
+			}).appendTo('#errors');
+		console.log("File Manager Error: " + err + "<br />To display more information for any" +
+			" function type [func_name] instead of [func_name](...)");
+	};
+
+	reportErrorFromWorker = function (err) {
+		reportError(err.message);
 	};
 
 	run = function (func) {
