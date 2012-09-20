@@ -87,26 +87,22 @@
 
 								</li>
 							</ul>
-							</nav>
+						</nav>
 						<!-- Choose Database -->
 						<nav id="tableSwitch" class="btn-group pull-right">
 							<!-- Title -->
-							<button class="btn dropdown-toggle pull-right" data-toggle="dropdown"
-							href="#">	<span id="curData"></span>
-							<span class="caret"></span>
-
+							<button class="btn dropdown-toggle pull-right" data-toggle="dropdown" href="#">
+								<span id="curData"></span>
+								<span class="caret"></span>
 							</button>
 							<!-- Options -->
 							<ul class="dropdown-menu">
-								<li><a href="javascript:fileUpload.setUploadToFUSE();">Fusion Tables</a>
-
-								</li>
-								<li><a href="javascript:fileUpload.setUploadToS3DB();">S3DB</a>
-
-								</li>
+								<li><a href="javascript:fileUpload.setUploadToFUSE();">Fusion Tables</a></li>
+								<li><a href="javascript:fileUpload.setUploadToS3DB();">S3DB</a></li>
 							</ul>
 						</nav>
 					</div>
+				</div>
 				<script id="template-upload" type="text/x-tmpl">
 					{ %
 						for (var i = 0, file; file = o.files[i]; i++) { %
@@ -142,11 +138,6 @@
 						{% } %}
 						</td > < /tr>
 				{% } %}
-			
-				
-				
-				
-				
 				</script>
 				<script id="template-download" type="text/x-tmpl">
 					{ %
@@ -185,11 +176,6 @@
 						</td>
 					</tr>
 				{% } %}
-			
-				
-				
-				
-				
 				</script>
 			</div>
 		</div>
