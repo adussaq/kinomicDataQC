@@ -1,7 +1,7 @@
 /*global KINOMICS, console, Worker */
 
 //Passed JS-Lint - Alex Dussaq 9/10/2012
-
+var glob;
 KINOMICS.workers = (function () {
 	'use strict';
 
@@ -58,11 +58,12 @@ KINOMICS.workers = (function () {
 
 	startWorkers = function (start_obj) {
 		//Variables Declarations
-		var callback, errorFunc, filename, numJobs, i;
+		var callback, errorFunc, filename, numJobs, i, returnObj;
 
 		//Variable Definitions
 		callback = start_obj.callback !== undefined ?  start_obj.callback : function () {};
-		errorFunc = start_obj.onError !== undefined ? start_obj.onError : function (err) {reportError(err); };
+		errorFunc = start_obj.onError || reportError;
+		reportError = errorFunc;
 		numJobs = start_obj.num_workers !== undefined ? start_obj.num_workers : 4;
 		numJobs *= 1;
 			//Coerces into a number drops decimals if .000... 
@@ -89,6 +90,10 @@ KINOMICS.workers = (function () {
 		}
 
 		return createWorkerObj(start_obj);
+		/*console.log(JSON.stringify(returnObj));
+		glob=returnObj;
+		callback(returnObj);
+		return returnObj;*/
 	};
 
 	createWorkerObj = function (start_obj) {
@@ -252,7 +257,7 @@ KINOMICS.workers = (function () {
 		//Actually start the workers for this scope
 		(function () {
 			var callback, errorFunc, filename, numJobs, i;
-			callback = start_obj.callback !== undefined ?  start_obj.callback : function () {};
+			//callback = start_obj.callback || function () {};
 			errorFunc = start_obj.onError !== undefined ? start_obj.onError : function (err) {reportError(err); };
 			numJobs = start_obj.num_workers !== undefined ? start_obj.num_workers : 4;
 			numJobs *= 1;
@@ -268,8 +273,6 @@ KINOMICS.workers = (function () {
 				workersArr[i] = [new Worker(filename), false];
 				workersArr[i][0].onerror = errorFunc;
 			}
-
-			callback();
 		}());
 
 		//return lib
