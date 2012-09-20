@@ -1,4 +1,4 @@
-/*global KINOMICS, console, Worker */
+/*global KINOMICS, console, window, Worker */
 
 //Passed JS-Lint - Alex Dussaq 9/10/2012
 var glob;
@@ -70,11 +70,9 @@ KINOMICS.workers = (function () {
 		filename = start_obj.filename;
 
 		//Make sure workers are available
-		/*if (typeof Worker !== 'function') {
+		if (!window.Worker) {
 			throw 'Workers are not available in this browser';
-		}*/
-
-		reportError("" + (typeof Worker) + JSON.stringify(Worker));
+		}
 
 		//Check Variable definitions
 		if (isNaN(numJobs) || numJobs !== parseInt(numJobs, 10)) {
