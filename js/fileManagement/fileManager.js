@@ -102,7 +102,7 @@ KINOMICS.fileManager = (function () {
 	};
 
 	reportErrorFromWorker = function (err) {
-		reportError(err.message);
+		reportError(err.message + err.lineno +err.filename);
 	};
 
 	run = function (func) {
