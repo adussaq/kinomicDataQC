@@ -1,5 +1,7 @@
 //Global variables and function declarations
-fuse = {
+//TODO: this is a big deal! I need to figure out how to determine if a file is too big to fit in one row in fusion tables and ammend my meathod if it is.
+
+var fuse = {
 JSON:
 	{
 	access_token:"",
@@ -92,7 +94,7 @@ queryTable:function(tableID, queryParams, callback){}
 	var barWellFileID = '1PLV48H-2oR2dQNJAZct2qkaPhJV97mYhsOD4lEI';
 	var clientId = '547674207977.apps.googleusercontent.com';
 	var apiKey = 'AIzaSyBjXKVpOKsYQd7DSzWRzQEVY0c7kiDJa4M';
-	var scopes = ['https://www.googleapis.com/auth/fusiontables','https://www.googleapis.com/auth/userinfo.email'];
+	var scopes = ['https://www.googleapis.com/auth/fusiontables','https://www.googleapis.com/auth/userinfo.email','https://www.googleapis.com/auth/plus.me'];
 	var max_requests = 2;
 	var numberOfRequests = 0;
 	var requestBuffer = [];
@@ -268,10 +270,18 @@ queryTable:function(tableID, queryParams, callback){}
 				
 				
 				//If it works
-				workers.fileImporter_sendToWorker(res.rows[0][0],
-					{fit:false,changed:false,'dbType':'fusionTable','originFile':fuseFile,'originLine':ftROWID,barcodeFile:barWellFileID},afterAddedToQC(that,fuseFile,ftROWID));
-				});
-			});
+				KINOMICS.fileManager.parseFile({
+					file:res.rows[0][0],
+					workersfile: 'js/fileManagement/fileParseWorker.js',
+					workers: KINOMICS.workers,
+					barcodes: KINOMICS.barcodes,
+					barcodeCreator: KINOMICS.expandBarcodeWell,
+					database: {fit:false,changed:false,'dbType':'fusionTable','originFile':fuseFile,'originLine':ftROWID,barcodeFile:barWellFileID},
+					callback: afterAddedToQC(that,fuseFile,ftROWID),
+					//callback: function(x){}
+					
+					});
+			});});
 		};
 	
 	var afterAddedToQC = function(buttonElement,fuseFile,ftROWID)
@@ -281,7 +291,7 @@ queryTable:function(tableID, queryParams, callback){}
 			//vars
 			var columns = fuse.JSON.barWellColumns;
 			var lines = [];
-			var barObject = kinomicsActiveData.JSON.barcodes;
+			var barObject = KINOMICS.barcodes;
 			
 			//check to make sure data does not already exist
 			fuse.queryTable(barWellFileID, {columns:['Barcode_Well','JSON'], 
@@ -305,24 +315,15 @@ queryTable:function(tableID, queryParams, callback){}
 							barObject[bar] = JSON.parse(res.rows[rowNum][1]);
 							barObject[bar].db.looked = true;
 							barcodesFound.push(bar);
-							kinomicsImportUI.buttons.fitCurves();
-							
+							KINOMICS.qualityControl.UI.updateCurveFitButton();
 							}
-						kinomicsImportUI.peptideTableViewer.addBarcodesToTable(barcodesFound);
 						}
 					
 					//Any data that is new will be added to the table after it is fit
 						// No point in adding data at this stage, doing this will just
 						// make the fitting algorithm a little longer.
 					//Add the data to be fit if need be
-					for( var bar in barObject )
-						{
-						if( barObject[bar].db.fit == false )
-							{
-							kinomicsImportUI.buttons.fitCurves();
-							break;
-							}
-						}
+					KINOMICS.qualityControl.UI.fitCurvesBut.update();
 					
 					buttonElement.html("<i class='icon-ok icon-white'></i>");
 					buttonElement.attr('class','btn btn-info');

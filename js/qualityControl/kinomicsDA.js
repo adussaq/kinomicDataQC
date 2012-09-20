@@ -1,218 +1,161 @@
-//'use strict';
-kinomicsActiveData = {
-JSON:function() 
-	{
-	var the = kinomicsActiveData.JSON;
-	the.barcodes = new Object(); // Actual list of active barcodes with associated data
-	
-	//Functions to fit the data
-	the.timeSeriesFunc = function( xVector, P )
-		{
-		//Yo + 1/[1/(k*[x-Xo])+1/Ymax]   P[0]=k, P[1]= Xo, p[2] = Ymax
-		//if( xVector[0] < P[1] ) {return 0;}
-		return (1/(1/(P[0]*(xVector[0]-P[1]))+1/P[2]));
-		//return params[0]+1/(1/(params[1]*(xVector[0]-params[2]))+1/params[3]);
+/*global KINOMICS: false, console: false */
+
+KINOMICS.qualityControl.DA = (function () {
+	'use strict';
+
+	//Local Variables
+	var lib, barWellObj, dataUpdateCallback, fitCurve, fitCurves, reportError, run;
+
+	//Define variables
+	lib = {};
+
+	//Define global functions
+	lib.fitCurve = function (input_obj) {
+		/*/////////////////////////////////////////////////////////////
+		TODO: fill in these comments
+		These will be comments for the user....
+		Fit the curve specified by input_obj
+		*//////////////////////////////////////////////////////////////
+		run(fitCurve)(input_obj);
+	};
+
+	lib.fitCurves = function (input_obj) {
+		/*/////////////////////////////////////////////////////////////
+		TODO: fill in these comments
+		These will be comments for the user....
+		Fits all curves that do not already have data...
+		*//////////////////////////////////////////////////////////////
+		run(fitCurves)(input_obj);
+	};
+
+	//Define Local functions
+	dataUpdateCallback = function (event) {
+		//variable declarations
+		var barcode, data, fit, params, peptideI, percentFinished, R2, totalSSE, type;
+		//Get location of original data
+		barcode = event.data.shift();
+		peptideI = event.data.shift();
+		type = event.data.shift();
+		fit = event.data.shift();
+		data = barWellObj[barcode].peptides[peptideI][type];
+		// console.log("Came back for barcode: " + barcode + " peptide: " + peptideI);
+		//variable defintions
+		data.parameters = fit.parameters;
+		data.R2 = fit.R2;
+		data.totalSqrErrors = fit.totalSqrErrors;
+	};
+
+	fitCurve = function (input_obj) {
+		//varible declarations
+		var worker, workerObj, workerFile;
+		//variable declarations
+		barWellObj = input_obj.barWellContainer;
+		workerObj = input_obj.workersLocation;
+		workerFile = input_obj.workersFile;
+		//TODO: check user input
+
+		//the point of this pattern is to start a worker only one time. No need to close it then...
+		worker = workerObj.startWorkers({filename: workerFile, num_workers: 1});
+		fitCurve = function (input_obj) {
+			//variable declarations
+			var analysisType, barcode, callback, data, peptide;
+
+			//variable definitions
+			analysisType = input_obj.analysisType;
+			barcode = input_obj.barcode;
+			callback = input_obj.callback || function () {};
+			peptide = input_obj.peptide;
+			//TODO: check user input
+
+			worker.submitJob([barWellObj[barcode].peptides[peptide][analysisType], barcode, peptide, analysisType],
+				dataUpdateCallback);
+
+			worker.onComplete(callback);
 		};
-	the.postWashFunc = function( xVector, params )
-		{
-		//Y = mx+b, params[0]=m, parmas[1]=b
-		return params[0]*xVector[0]+params[1];
+		//call the new definition to do work
+		fitCurve(input_obj);
+	};
+/////////
+	fitCurves = function (input_obj) {
+		//variable declarations
+		var callback, progressBar, barcodesAnalyzed, barContainer, barWell, progress,
+			peptide, percentFinished, total, updateData, workers, workersFile, workerObj;
+
+		//variable definitions
+		barcodesAnalyzed = [];
+		barWellObj = input_obj.barWellContainer;
+		percentFinished = 0;
+		progress = 0;
+		progressBar = input_obj.progressBar;
+		total = 0;
+		workerObj = input_obj.workersLocation;
+		workersFile = input_obj.workersFile;
+		callback = input_obj.callback;
+
+		//TODO: check user input
+		//function definitions
+		updateData = function (event) {
+			dataUpdateCallback(event);
+			//Update the bar
+			progress += 1;
+			percentFinished = Math.floor(progress / total * 100);
+			progressBar.width(percentFinished + '%');
+			progressBar.text(percentFinished + '%');
 		};
-	
-	the.workersLocation = "js/qualityControl/kinomicsWorkers.js";
-		
-	},
 
-};
+		//Open workers
+		workers = workerObj.startWorkers({filename: workersFile, num_workers: 4});
 
-
-//This series of functions call the workers in kinomicsWorkers.js
-workers = {
-
-//This sends the 'got' file to a worker for analysis
-fileImporter_sendToWorker:function( fileObj, additionalObj, callback )
-		{
-		var the = kinomicsActiveData.JSON;
-		//Create worker
-		var worker = new Worker(the.workersLocation);
-	
-		//Add call back
-		worker.addEventListener('message', function(e)
-			{
-			//Kill the worker
-			worker.terminate();
-		
-			//Update active barcodes
-			var result = JSON.parse(e.data);
-			for (var attrname in result) 
-				{
-				kinomicsActiveData.JSON.barcodes[attrname] = result[attrname]; 
-				kinomicsActiveData.JSON.barcodes[attrname].db = amdjs.clone(additionalObj);
-				}
-			
-			//Update UI to allow user to begin fitting curves - removed to be more finely
-			//  controlled, should be preformed by the callback
-			//kinomicsImportUI.buttons.fitCurves();
-			
-			//Callback
-			callback();
-			
-			},false);
-	
-		//Get worker started (use a function string command found at the bottom of kinomicsWorkers.js
-		worker.postMessage( JSON.stringify(["getFileFromFlat",fileObj]) );
-	},
-
-
-//This worker imports files
-fileImporter:function(fileName)
-	{
-	var the = kinomicsActiveData.JSON;
-	//Define my non global functions
-	var getFile = function( file )
-		{
-		$.get(file).success(function(result) {workers.fileImporter_sendToWorker(result)});
-		};
-	//Actually start the process
-	getFile(fileName);
-	},
-
-//This take an input of any object containing any number of 'sample' objects and fits
-	// them to the appropriate curve(s), curveToBeFit can be all, postWash, timeSeries
-	// if it is not set, then it will be set to all.
-	//Data format: sample[barcode].peptides[peptide].(timeSeries/postWash)
-fitDataToCurves:function(samples, CurveToBeFit)
-	{
-	if( typeof CurveToBeFit == undefined || !CurveToBeFit.match(/all|timeSeries|postWash/) ){CurveToBeFit="all";}
-	var the = kinomicsActiveData.JSON
-	var barcodesAnalyzed = [];
-	
-	//Vars for running the slider bar
-	var total=0, count=0, bar, percentFinished = 0;
-	//Vars for running the looping to answer the functions
-	var loop, currentlyOn = 0, maximumOn = 4, commands = new Array(), finished = false; 
-		//max based on firefox limitation found: http://stackoverflow.com/questions/9339892/does-a-firefox-workers-limit-exist
-	
-		
-	//Create and show the bar
-	var barContainer = $('<div/>', {class:"progress progress-striped active", id: "fittingBarContainer"}).appendTo('#barSpot');
-	var bar = $('<div/>', {class:"bar", style:"width: 0%", id:"bar"}).appendTo(barContainer);
-
-	//Initialize my list of commands to run
-	for( var barcode in samples )
-		{
-		if( the.barcodes[barcode].db.fit == true) {continue};
-		barcodesAnalyzed.push(barcode);
-		the.barcodes[barcode].db.fit = true
-		for ( var peptide in samples[barcode].peptides )
-			{
-			if( CurveToBeFit == "all" )
-				{
-				commands.push(JSON.stringify([samples[barcode].peptides[peptide].postWash,barcode,peptide,"postWash"]));
-				commands.push(JSON.stringify([samples[barcode].peptides[peptide].timeSeries,barcode,peptide,"timeSeries"]));
-				}
-			else if( CurveToBeFit == "postWash" )
-				{
-				commands.push(JSON.stringify([samples[barcode].peptides[peptide].postWash,barcode,peptide,"postWash"]));
-				}
-			else if( CurveToBeFit == "timeSeries" )
-				{
-				commands.push(JSON.stringify([samples[barcode].peptides[peptide].timeSeries,barcode,peptide,"timeSeries"]));
+		//Start submitting jobs
+		for (barWell in barWellObj) {
+			if (barWellObj.hasOwnProperty(barWell) && barWellObj[barWell].db.fit === false) {
+				barWellObj[barWell].db.fit = true;
+				//Hopefully I can get rid of the barcodesAnalyzed part, and just update the table...
+				barcodesAnalyzed.push(barWell);
+				for (peptide in barWellObj[barWell].peptides) {
+					if (barWellObj[barWell].peptides.hasOwnProperty(peptide)) {
+						//TODO: add in dealing with '0' data, and errors based on barcode_well rather than file.
+						workers.submitJob([barWellObj[barWell].peptides[peptide].postWash, barWell, peptide, "postWash"],
+							updateData);
+						workers.submitJob([barWellObj[barWell].peptides[peptide].timeSeries, barWell, peptide, "timeSeries"],
+							updateData);
+						total += 2;
+					}
 				}
 			}
-		}	
-	total = commands.length;
-	var lalacount = 0;
-	//function that actually runs the program
-	loop = function()
-		{
-		if( currentlyOn < maximumOn && commands.length > 0 )
-			{
-			currentlyOn++;
-			var worker = new Worker(the.workersLocation);
-			worker.addEventListener('message', function(e)
-				{
-				//Kill the worker
-				worker.terminate();
-				
-				//Update the bar
-				count++;
-				percentFinished = Math.floor(count/total*100);
-				bar.width(percentFinished+'%');
-				bar.text(percentFinished+'%');
-				
-				//load the results into kinomics.barcodes
-				var results = JSON.parse(e.data);
-				
-				var barcode = results.shift(), peptide = results.shift(), type = results.shift();
-				var params = results[0]; var totalSSE = results[1];var R2 = results[2];
-				var data = the.barcodes[barcode].peptides[peptide][type];
-				
-				data.parameters = params;
-				data.R2 = R2;
-				data.totalSqrErrors = totalSSE;
-				data.wilcox = results[3];
-				
-				//Reset the loop
-				currentlyOn--;
-				loop();
-				},false);
-			worker.postMessage( JSON.stringify(["fitData",commands.shift()]) );
-			loop();
-			}
-		//This means all processing is done!
-		else if( commands.length == 0 && ! finished && percentFinished==100 )
-			{
-			finished = true;
-			kinomicsImportUI.peptideTableViewer.addBarcodesToTable(barcodesAnalyzed);
+		}
 
+		//Now that all jobs have been submitted we can show the bar growing
+		progressBar.show();
+
+		workers.onComplete(function () {
 			//Finalize the loading bar
-			bar.width(100+'%');
-			barContainer.removeClass("active").hide();
-			
+			progressBar.width(100 + '%');
+			workers.clearWorkers();
+			callback();
 			//Adds data to the fusion table object - this can occur after the data has been
 				//displayed, it should run in the background no problem... Just make sure
 				//the save button shows up after this is done.
-			fileUpload.sendBarcodesToDB(barcodesAnalyzed,fileUpload.showSaveDataButton);
-			
+			//fileUpload.sendBarcodesToDB(barcodesAnalyzed, fileUpload.showSaveDataButton);
+		});
+	};
 
-			
+	reportError = function (err) {
+		return console.log("Error with quality control data analysis: " + err + "\nTo display more information for any" +
+			" function type <func_name> instead of <func_name>(...)");
+	};
+
+	run = function (func) {
+		return function () {
+			var y;
+			try {
+				y = func.apply(null, arguments);
+			} catch (err) {
+				reportError(err);
 			}
-		}
-	loop();
-	
-	},
-	
-fitDataToSingleCurve:function(command, callback, callbackArg)
-	{
-	var the = kinomicsActiveData.JSON
-	var worker = new Worker(the.workersLocation);
-	worker.addEventListener('message', function(e)
-		{
-		//Kill the worker
-		worker.terminate();
-				
-		//load the results into kinomics.barcodes
-		var results = JSON.parse(e.data);
-		var barcode = results.shift(), peptide = results.shift(), type = results.shift();
-		var params = results[0]; var totalSSE = results[1];var R2 = results[2]; 
-		var data = the.barcodes[barcode].peptides[peptide][type];
-				
-		data.parameters = params;
-		data.R2 = R2;
-		data.totalSqrErrors = totalSSE;
-		data.wilcox = results[3];
-		
-		//Call Next Function
-		callback(callbackArg);
-		},false);
-	// command looks like this: [data,barcode,peptide,type]
-	//Actually run the proccess
-	worker.postMessage( JSON.stringify(["fitData",JSON.stringify(command)]) );
-	},
-		
+			return y;
+		};
+	};
 
-};
-
-//In order for these functions to work we have to initialize variables
-kinomicsActiveData.JSON();
+	return lib;
+}());

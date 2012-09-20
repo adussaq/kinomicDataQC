@@ -108,30 +108,41 @@ fmincon:function(fun, x0, X, y, options)
 		}	
 	
 	var lastItter = Infinity;
+	var count = 0;
+	var x1 = amdjs.clone(x0)
 		
 	for( itt = 0; itt<options.maxItt; itt++ )
-		{
-		var x1 = amdjs.clone(x0)
+		{	
 		for( parI in x1 )
 			{
 			x1[parI]+=options.step[parI];
-			if( sqrSumOfErrors(fun, X,y,x1)<sqrSumOfErrors(fun, X,y,x0) )
+			if( amdjs.sqrSumOfErrors(fun, X,y,x1)<amdjs.sqrSumOfErrors(fun, X,y,x0) )
 				{
 				x0[parI]=x1[parI];
 				options.step[parI]*=1.2;
 				}
 			else
 				{
+				x1[parI]=x0[parI];
 				options.step[parI]*=-0.5;
 				}
 			} 
-		var sse = sqrSumOfErrors(fun, X,y,x0);
-		if( Math.abs( 1- sse/lastItter )< options.minPer )
+		
+		//make it so it checks every 3 rotations for end case
+		if( (itt %3) === 0 )
 			{
-			break;
+			var sse = amdjs.sqrSumOfErrors(fun, X,y,x0);
+			if( Math.abs( 1- sse/lastItter )< options.minPer )
+				{
+				break;
+				}
+			else
+				{
+				lastItter = sse;
+				}
 			}
-		lastItter = sse;
 		}
+
 	
 	var SSETot = sqrSumOfErrors(fun, X, y, x0);
 	
