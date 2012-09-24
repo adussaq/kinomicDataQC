@@ -10,7 +10,17 @@
 	var fmincon, determineRunningConditions, postWashFunc, timeSeriesFunc;
 
 	//variable definitions
+	postWashFunc = function (xVector, params) {
+		//Y = mx+b, params[0]=m, parmas[1]=b
+		return params[0] * xVector[0] + params[1];
+	};
 
+	timeSeriesFunc = function (xVector, P) {
+		//Yo + 1/[1/(k*[x-Xo])+1/Ymax]   P[0]=k, P[1]= Xo, p[2] = Ymax
+		//if (xVector[0] < P[1]) {return Infinity; }
+		return 1 / (1 / (P[0] * (xVector[0] - P[1])) + 1 / P[2]);
+		//return params[0]+1/(1/(params[1]*(xVector[0]-params[2]))+1/params[3]);
+	};
 
 	//function definitions
 	fmincon = (function () {
@@ -156,22 +166,11 @@
 			Ym = Ym === 0 ? -10 : Ym;
 			// y0 = Ym === y0 ? Ym - 1 : y0;
 			// c = Ym * y0 / (vi * (y0 - Ym)) + xMin;
-			c = y0 / xMin;
+			xMin = xMin || 10;
+			c = y0 / xMin || -10;
 			params =  [vi, c, Ym];
 		}
 		return {params: params, X: xIni, y: yIni, func: func};
-	};
-
-	postWashFunc = function (xVector, params) {
-		//Y = mx+b, params[0]=m, parmas[1]=b
-		return params[0] * xVector[0] + params[1];
-	};
-
-	timeSeriesFunc = function (xVector, P) {
-		//Yo + 1/[1/(k*[x-Xo])+1/Ymax]   P[0]=k, P[1]= Xo, p[2] = Ymax
-		//if( xVector[0] < P[1] ) {return 0;}
-		return 1 / (1 / (P[0] * (xVector[0] - P[1])) + 1 / P[2]);
-		//return params[0]+1/(1/(params[1]*(xVector[0]-params[2]))+1/params[3]);
 	};
 
 	self.onmessage = function (event) {

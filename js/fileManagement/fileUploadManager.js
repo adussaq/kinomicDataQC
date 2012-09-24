@@ -1,4 +1,21 @@
 //Global variables and function declarations
+
+//This line will set height of 'fileopts' equal to one another
+// $('.fileOpts').height($('.fileOpts').height());
+	//Or
+// var  fo = $('.fileOpts');
+// fo.height(fo.height());
+
+changeHeight = function() {
+	var max = 20; $('.fileOpts').each(function(ind,x){
+		$(x).height('auto');
+		if($(x).is(":visible")){
+			max = Math.max($(x).height(), max);
+		}
+	}).height(max);
+};
+
+
 fileUpload = 
 	{
 	//Variables
@@ -24,13 +41,14 @@ fileUpload =
 	var nameText = "Login";
 	
 	//Local functions
-	var changeDisplay = function()
-		{
+	var changeDisplay = function() {
 		$('.fileOpts').hide();
 		currentUpload.show();
+		if (currentUpload.attr('id') !== 'defaultFile') { $('#colBrowse').show()};
 		$('.curData').text(menuText);
 		$('.username').html(nameText);
-		};
+		changeHeight();
+	};
 	
 	var FUSE_sendBarcodesToDB = function(barObject,callback)
 		{
@@ -198,7 +216,7 @@ fileUpload =
 	
 	//Initiate the display
 	changeDisplay();
-	
+	changeHeight();
 	
 	//Make, but hide the save button
 	var saveButtonGo = function()

@@ -239,23 +239,22 @@ matrixMult:function( mat1, mat2 )
 //This function converts math strings into the proper form, requires mathscribe/jqmath
 doMathSrc:function(equation) 
 	{
-	var srcE =new Object();
-	var h;
+	/*var h, ms, t, srcE = {};
 	srcE.value = equation;
-	var ms = srcE.value.replace(/&([-#.\w]+);|\\([a-z]+)(?: |(?=[^a-z]))/ig,
+	ms = srcE.value.replace(/&([-#.\w]+);|\\([a-z]+)(?: |(?=[^a-z]))/ig,
 			function(s, e, m) 
 				{
 				if (m && (M.macros_[m] || M.macro1s_[m]))	return s;	// e.g. \it or \sc
-				var t = '&'+(e || m)+';', res = $('<span>'+t+'</span>').text();
+				t = '&'+(e || m)+';', res = $('<span>'+t+'</span>').text();
 				return res != t ? res : ents_[e || m] || s;
 				}),
 	h = ms.replace(/</g, '&lt;');
 	
 	if (srcE.value != h)	srcE.value = h;	// assignment may clear insertion point
-	var t;
 	try {t = M.sToMathE(ms, true);} 
-	catch(exc) {t = String(exc);}
-	return t.innerHTML;
+	catch(exc) {t = String(exc);}*/
+	var aba = M.sToMathE(equation);
+	return aba;//.outerHTML //|| $(aba).html();
 	},	
 
 }
