@@ -293,11 +293,10 @@
 					if (peptidesIn.hasOwnProperty(peptide)) {
 						peptideCount += 1;
 						peptidesOut[peptide] = peptidesOut[peptide] || {
-							timeSeries: {number: [], goodData: []},
-							postWash: {number: [], goodData: []}
+							timeSeries: {number: []},
+							postWash: {number: []}
 						};
 						peptidesOut[peptide][targetProp].number.push(peptidesIn[peptide][i]);
-						peptidesOut[peptide][targetProp].goodData.push(true);
 					}
 				}
 			}

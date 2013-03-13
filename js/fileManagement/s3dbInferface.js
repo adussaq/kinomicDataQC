@@ -1,3 +1,76 @@
+/*global KINOMICS, console, $, window, s3dbfu */
+
+KINOMICS.S3DB = (function () {
+	'use strict';
+
+	//variable declarations
+	var lib, reportError, run, update;
+
+	//variable definitions
+	lib = {};
+
+	//function defintions
+	lib.update = function (input) {
+		//This portion contains documentation for the user
+		run(update)(input);
+	};
+
+	//local functions
+	reportError = function (err) {
+		console.log("S3DB Error: " + err + "<br />To display more information for any" +
+			" function type [func_name] instead of [func_name](...)");
+	};
+
+	run = function (func) {
+		return function () {
+			var y;
+			try {
+				y = func.apply(null, arguments);
+			} catch (err) {
+				reportError(err);
+			}
+			return y;
+		};
+	};
+
+	update = function (input) {
+		//This contains the actual function process
+		return false;
+	};
+
+	return lib;
+}());
+
+//Everything below is archived code, the uncommented stuff is set up and should be moved to the bottom of the above
+//This actually runs at the load of jquery? But set here for s3db login/fileupload options, also update, try to get
+//rid of extra stuff...
+$(function () {
+	'use strict';
+	// Initialize the jQuery File Upload widget:
+	$('#fileupload').fileupload();
+
+	// Enable iframe cross-domain access via redirect option:
+	$('#fileupload').fileupload(
+		//{done: function(e,data){s3dbUI.tableLoadCallback(e,data);}},
+		'option',
+		'redirect',
+		window.location.href.replace(/\/[^\/]*$/, '/cors/result.html?%s')
+	);
+
+	//S3DB File Upload Stuff
+	var data = {
+		's3dburl': 'http://204.232.200.16/uabs3db',
+		'collectionid': '89',
+		'ruleid': '99',
+		'spinnertext': ' working...'
+	};
+
+	s3dbfu.init(data);
+});
+
+
+
+
 /*s3dbUI = {
 
 JSON:function()
@@ -143,30 +216,6 @@ addToTableMin:function()
 s3dbUI.collectionSelection();
 s3dbUI.JSON();
 */
-//This actually runs at the load of jquery? But set here for s3db login/fileupload options
-$(function()
-	{
-	'use strict';
-	// Initialize the jQuery File Upload widget:
-	$('#fileupload').fileupload();
-	// Enable iframe cross-domain access via redirect option:
-	$('#fileupload').fileupload
-		(
-		//{done: function(e,data){s3dbUI.tableLoadCallback(e,data);}},
-		'option',
-		'redirect',
-		window.location.href.replace(/\/[^\/]*$/,'/cors/result.html?%s')
-		);
-			
-	//S3DB File Upload Stuff
-	var data = 
-		{
-		's3dburl':'http://204.232.200.16/uabs3db',
-		'collectionid':'89',
-		'ruleid':'99',
-		'spinnertext':' working...',
-		};
-	s3dbfu.init(data);
-	});
+
 	
 

@@ -3,29 +3,38 @@
 KINOMICS.expandBarcodeWell = (function () {
 	"use strict";
 	//variable declarations
-	var createObject, func, run, reportError, toString, userToString, toNumber;
+	var createObject, func, run, reportError, save, toString, userSave, userToString, toNumber;
 	//variable definitions
 
 	//functionsToReturn
 	func = function (init) {
-		/*/////////////////////////////////////////////////////////////////////
-			This function expands a barcode object and gives it functionality.
-				ARGVS: init: (object) small barcode object, required
-		*/////////////////////////////////////////////////////////////////////
+	/*/////////////////////////////////////////////////////////////////////
+	This function expands a barcode object and gives it functionality.
+	ARGVS: init: (object) small barcode object, required
+	*/////////////////////////////////////////////////////////////////////
 		return run(createObject)(init);
 	};
 
 	//functions to attach to object
 	userToString = function (length) {
-		/*/////////////////////////////////////////////////////////////////////
-			Turns the object into a string using one of two methods based on the
-			argument passed in: short [the minimized version that can be expanded
-			by calling lib.newBarcodeWell(JSON.parse('barcodeAsString'))] or long
-			[the full version that can be pasted into any enviroment] 
-				ARGVS: length: (string) can be either 'short' or 'long',
-					determines the type of string created by the object.
-		*/////////////////////////////////////////////////////////////////////
+	/*/////////////////////////////////////////////////////////////////////
+	Turns the object into a string using one of two methods based on the
+		argument passed in: short [the minimized version that can be expanded
+		by calling lib.newBarcodeWell(JSON.parse('barcodeAsString'))] or long
+		[the full version that can be pasted into any enviroment] 
+	ARGVS: length: (string) can be either 'short' or 'long',
+			determines the type of string created by the object.
+	*/////////////////////////////////////////////////////////////////////
 		return run(toString)(length, this);
+	};
+
+	userSave = function (callback) {
+	/*/////////////////////////////////////////////////////////////////////
+	Saves the data to the appropriate database if there has been a
+		change.
+	ARGVS: callback: optional callback function.
+	*/////////////////////////////////////////////////////////////////////
+		run(save)(this, callback);
 	};
 
 	//local functions
@@ -38,7 +47,7 @@ KINOMICS.expandBarcodeWell = (function () {
 
 		//check user input
 		if (typeof lengthStr !== 'string' || !lengthStr.match(/^(short|long)$/)) {
-			throw "length must be a string either 'short' or 'long'";
+			lengthStr = 'short';
 		}
 
 		if (lengthStr === 'short') {
@@ -69,6 +78,22 @@ KINOMICS.expandBarcodeWell = (function () {
 			}
 			return y;
 		};
+	};
+
+	save = function (that, callback) {
+		//variable declarations
+
+		//variable defintions
+		if (that.db.changed) {
+			that.db.changed = false;
+			if (that.db.dbType === 'fusionTables') {
+				KINOMICS.fileManager.DA.fusionTables.saveBarcode(that, callback); //TODO: pass this in?
+			} else if (that.db.dbType === 'S3DB') {
+				KINOMICS.fileManager.DA.S3DB.saveBarcode();
+			} else {
+				throw "Error with DB type, must be either fusionTables or S3DB. It is: " + that.db.dbType;
+			}
+		}
 	};
 
 	toNumber = function (arr) {
@@ -117,7 +142,8 @@ KINOMICS.expandBarcodeWell = (function () {
 		}
 
 		//define to string functions
-		obj.toString = userToString;
+		obj.asString = userToString;
+		obj.save = userSave;
 		return obj;
 	};
 	return func;

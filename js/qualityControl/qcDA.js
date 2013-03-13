@@ -4,7 +4,7 @@ KINOMICS.qualityControl.DA = (function () {
 	'use strict';
 
 	//Local Variables
-	var lib, barWellObj, dataUpdateCallback, fitCurve, fitCurves, reportError, run;
+	var lib, barWellObj, dataUpdateCallback, fitCurve, fitCurves, makeDeepCopy, reportError, run;
 
 	//Define variables
 	lib = {};
@@ -75,15 +75,16 @@ KINOMICS.qualityControl.DA = (function () {
 		//call the new definition to do work
 		fitCurve(input_obj);
 	};
-/////////
+
 	fitCurves = function (input_obj) {
 		//variable declarations
-		var callback, progressBar, barcodesAnalyzed, barContainer, barWell, progress,
-			peptide, percentFinished, total, updateData, workers, workersFile, workerObj;
+		var callback, progressBar, barcodesAnalyzed, barContainer, barWell, barWellChanged, progress,
+			peptide, percentFinished, total, updateData, workers, workersFile, workerObj, i, length;
 
 		//variable definitions
 		barcodesAnalyzed = [];
 		barWellObj = input_obj.barWellContainer;
+		barWellChanged = [];
 		percentFinished = 0;
 		progress = 0;
 		progressBar = input_obj.progressBar;
@@ -109,15 +110,15 @@ KINOMICS.qualityControl.DA = (function () {
 		//Start submitting jobs
 		for (barWell in barWellObj) {
 			if (barWellObj.hasOwnProperty(barWell) && barWellObj[barWell].db.fit === false) {
-				barWellObj[barWell].db.fit = true;
+				barWellChanged.push(barWell);
 				//Hopefully I can get rid of the barcodesAnalyzed part, and just update the table...
 				barcodesAnalyzed.push(barWell);
 				for (peptide in barWellObj[barWell].peptides) {
 					if (barWellObj[barWell].peptides.hasOwnProperty(peptide)) {
 						//TODO: add in dealing with '0' data, and errors based on barcode_well rather than file.
-						workers.submitJob([barWellObj[barWell].peptides[peptide].postWash, barWell, peptide, "postWash"],
+						workers.submitJob([makeDeepCopy(barWellObj[barWell].peptides[peptide].postWash), barWell, peptide, "postWash"],
 							updateData);
-						workers.submitJob([barWellObj[barWell].peptides[peptide].timeSeries, barWell, peptide, "timeSeries"],
+						workers.submitJob([makeDeepCopy(barWellObj[barWell].peptides[peptide].timeSeries), barWell, peptide, "timeSeries"],
 							updateData);
 						total += 2;
 					}
@@ -132,12 +133,39 @@ KINOMICS.qualityControl.DA = (function () {
 			//Finalize the loading bar
 			progressBar.width(100 + '%');
 			workers.clearWorkers();
+			length = barWellChanged.length;
+			for (i = 0; i < length; i += 1) {
+				barWell = barWellChanged[i];
+				barWellObj[barWell].db.fit = true;
+				barWellObj[barWell].db.changed = true;
+			}
 			callback();
 			//Adds data to the fusion table object - this can occur after the data has been
 				//displayed, it should run in the background no problem... Just make sure
 				//the save button shows up after this is done.
 			//fileUpload.sendBarcodesToDB(barcodesAnalyzed, fileUpload.showSaveDataButton);
 		});
+	};
+
+	makeDeepCopy = function (obj) {
+		//This function accesses all portions of the data and makes a copy to insure properties with getters/setters work
+		var outObj, prop, i;
+		if (typeof obj !== 'object') {
+			outObj = obj;
+		} else if (Array.isArray(obj)) {
+			outObj = [];
+			for (i = 0; i < obj.length; i += 1) {
+				outObj[i] = makeDeepCopy(obj[i]);
+			}
+		} else {
+			outObj = {};
+			for (prop in obj) {
+				if (obj.hasOwnProperty(prop)) {
+					outObj[prop] = makeDeepCopy(obj[prop]);
+				}
+			}
+		}
+		return outObj;
 	};
 
 	reportError = function (err) {

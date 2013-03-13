@@ -27,7 +27,7 @@
 		</style>
 
 		<!-- jQuery load this at top since everything depends on it-->
-		<script src="js/general/jquery-1.7.2.min.js"></script>
+		
 
 		<!-- TODO: update these icons -->
 		<link rel="shortcut icon" href="http://twitter.github.com/bootstrap/assets/ico/favicon.ico"></link>
@@ -58,7 +58,7 @@
 							<li><a href="#qualtityControl" data-toogle="tab" id="tag2">Quality Control</a>
 
 							</li>
-							<li><a href="#fileUpload" data-toogle="tab" id="tag3">Files</a>
+							<li><a href="#fileUpload" data-toogle="tab" id="tag3">Data</a>
 
 							</li>
 							<!-- TODO: change to more logical view Login tablet/phone-->
@@ -69,7 +69,7 @@
 										<i class="icon-user"></i> <span class="username">Login</span>
 										<span class="caret"></span>
 									</a>
-
+<!-- TODO: fix this stuff for the iphone login... -->
 									<!-- Options -->
 									<ul id="user-access-options" class="dropdown-menu">
 										<li id='auth'><a href="javascript:fuse.authenticate(function(){});">Authenticate with Google Account</a>
@@ -94,9 +94,7 @@
 										<span class="caret"></span>
 									</button>
 									<!-- Options Phone/Tablet-->
-									<ul class="dropdown-menu">
-										<li><a href="javascript:fileUpload.setUploadToFUSE();">Fusion Tables</a></li>
-										<li><a href="javascript:fileUpload.setUploadToS3DB();">S3DB</a></li>
+									<ul class="dropdown-menu dbSelector">
 									</ul>
 								</nav>
 							</li>
@@ -112,7 +110,8 @@
 
 							<!-- Options -->
 							<ul id="user-access-options" class="dropdown-menu">
-								<li id='auth'><a href="javascript:fuse.authenticate(function(){});">Authenticate with Google Account</a>
+<!-- TODO: fix the following line to something reasonable... -->
+								<li id='authFT'><a>Authenticate with Google Account</a>
 
 								</li>
 								<li class="divider"></li>
@@ -132,9 +131,7 @@
 								<span class="caret"></span>
 							</button>
 							<!-- Options -->
-							<ul class="dropdown-menu">
-								<li><a href="javascript:fileUpload.setUploadToFUSE();">Fusion Tables</a></li>
-								<li><a href="javascript:fileUpload.setUploadToS3DB();">S3DB</a></li>
+							<ul class="dropdown-menu dbSelector">
 							</ul>
 						</nav>
 					</div>
@@ -240,11 +237,11 @@
 			<!-- File manager tab -->
 			<div class="tab-pane" id="fileUpload">
 				<div id="s3dbfu-msgs"></div>
-				<h1>File Manager</h1>
+				<h1>Data Manager</h1>
 				<div id="homediv">
 					<div class="container">
 						<!-- Default display -->
-						<div class="well span9 fileOpts" id="defaultFile">Please login to either Google or S3DB and select appropriate database.<br /></div>
+						<div class="well span11" id="defaultFile">Please login to either Google or S3DB and select appropriate database to save and display files.<br /></div>
 
 						<!-- Logged in display -->
 						<form id="fileupload" action="" method="POST" enctype="multipart/form-data">
@@ -252,25 +249,17 @@
 								<!-- Side Navagation bar-->
 								<div class="span3">
 								    <div class="well fileOpts" id='colBrowse'>
-										<div class="sidebar-nav">
-				        					<ul class="nav nav-list">
-									            <li class="nav-header">Collections</li>
-									            <li class="active" ><a href="#" id="ORIGINcol">Bionavigator Output</a></li>
-						        			    <li><a href="#" id="JSONcol">JSON Data</a></li>
-				        	  		    		<li><a href="#" id="RDFcol">RDF Data</a></li>
-							            	</ul>
-										</div>
 					    		    </div>
 								</div>
 
 								<!-- File Upload options panel - S3DB-->
-								<div class="span9">
+								<div class="span8">
 									<div class="well fileOpts" id="S3DBupload">
 										<h4>S3DB</h4>
-										<div class="row fileupload-buttonbar">
+										<div class="row fileupload-buttonbar originRow">
 											<div class="span">
 												<!-- Add files -->	
-												<span class="btn btn-success fileinput-button" id="inputBut">
+												<span class="btn btn-success fileinput-button inputBut">
 													<span><i class="icon-plus icon-white"></i>Add files...</span>
 													<input type="file" name="files[]" class="hiddenBut" multiple></input>
 												</span>
@@ -294,6 +283,12 @@
 										</div>
 										<div class="fileupload-loading"></div>
 										<br />
+										<div class="row">
+											<div class="span">
+												<!-- Add files -->	
+												<p class="currentAnaDisp"></p>
+											</div>
+										</div>
 									</div>
 								</div>
 
@@ -301,18 +296,33 @@
 								<div class="span9">
 									<div class="well fileOpts" id="fusionUpload">
 										<h4>Fusion Tables</h4>
-										<div class="row fileupload-buttonbar">
+										<div class="row fileupload-buttonbar batch">
 											<div class="span">
 												<!-- Add files -->	
-												<span class="btn btn-success" id="inputBut">
+												<span class="btn btn-success inputBut">
 													<span><i class="icon-plus icon-white"></i>Add files...</span>
-													<input type="file" name="files[]" class="hiddenBut" multiple></input>
+													<input type="file" name="files[]" class="hiddenBut" id= "FUSEsub" multiple></input>
 												</span>
 												<!-- start multiple upload -->
 												<button type="hidden" class="btn btn-primary start" id="multUp"><i class="icon-upload icon-white"></i><span>Start upload</span></button>
 											</div>
 										</div>
+										<div class="row fileupload-buttonbar analysis">
+											<div class="span">
+												<!-- Add files -->	
+												<span class="btn btn-success inputBut">
+													<span><i class="icon-plus icon-white"></i>New Analysis...</span>
+													<button class="hiddenBut" id= "NEWanalysis" multiple></input>
+												</span>
+											</div>
+										</div>
 										<br />
+										<div class="row">
+											<div class="span">
+												<!-- Add files -->	
+												<p class="currentAnaDisp"></p>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -332,17 +342,38 @@
 		<!-- Javascript placed at the end of the document so the pages load faster
 		-->
 		<div id="javascripts">
-			<script src="https://apis.google.com/js/client.js?onload=OnLoadCallback"></script>
-  			<script type="text/javascript" src="js/general/jsapi.js"></script> 
+			<!-- Major Packages -->
+			<script src="js/general/jquery-1.7.2.min.js"></script>
 			<script src="js/bootstrap/js/bootstrap.min.js"></script>
-			<!-- Quality Control -->
-			<script src="js/general/amdjs_1.1.0.js" type="text/javascript"></script>
+
+			<!-- Support Packages -->
 			<script src="js/qualityControl/UIsupport/jquery.nouislider.js"></script>
 			<script src="js/qualityControl/UIsupport/jqmath-etc-0.2.0.min.js"></script>
-			<!-- GAPI functions for authorizing a client -->
-<!--  		<script src="js/general/client.js" gapi_processed="true"></script> -->
-			<!-- File Upload -->
-			<script src="js/fileManagement/s3dbInferface.js"></script>
+			<script src="https://apis.google.com/js/client.js?onload=OnLoadCallback"></script>
+			<script type="text/javascript" src="js/general/jsapi.js"></script>
+
+			<!-- My Packages -->
+			<script src="js/general/nameSpace.js"></script>
+			<script src="js/general/barcodeProto.js"></script>
+			<script src="js/general/workersPackage.js"></script>
+			<script src="js/general/amdjs_1.1.0.js" type="text/javascript"></script>
+			<script src="js/qualityControl/qcDA.js"></script>
+			<script src="js/fileManagement/fmDA.js"></script>
+			<script src="js/fileManagement/fmDA_FT.js"></script>
+			<script src="js/fileManagement/fmDA_s3db.js"></script>
+			<script src="js/fileManagement/fusionTables.js"></script>
+<!-- 		<script src="js/fileManagement/fileUploadManager.js"></script> -->
+
+			<!-- UI -->
+			<script src="js/qualityControl/qcUI.js"></script>
+			<script src="js/fileManagement/fmUI.js"></script>
+
+			
+			<!-- <script src="js/general/client.js" gapi_processed="true"></script> -->
+
+
+			<!-- S3DB/filemanagement form -->
+		<!--	<script src="js/fileManagement/s3dbInferface.js"></script>
 			<script src="https://raw.github.com/ebadedude/S3DB-File-Upload/master/js/jquery.ui.widget.js"
 			type="text/javascript"></script>
 			<script src="https://raw.github.com/ebadedude/S3DB-File-Upload/master/js/tmpl.min.js"
@@ -361,11 +392,7 @@
 			type="text/javascript"></script>
 			<script src="https://raw.github.com/ebadedude/S3DB-File-Upload/f893461cf3f9e55fa2c12a5536abc17cb7ab962b/s3dbfu.js"
 			type="text/javascript"></script>
-			<!-- Work with fusion tables -->
-			<script src="js/fileManagement/fusionTables.js"></script>
-			<!-- File Upload Manager -->
-			<script src="js/fileManagement/fileUploadManager.js"></script>
-
+			-->
 			<!-- Makes the input botton invisible -->
 			<style type="text/css">
 				.inputBut {
@@ -393,15 +420,8 @@
 				}
 			</style>
 
-			<!-- Lint rewrite -->
-			<script src="js/general/nameSpace.js"></script>
-			<script src="js/general/workersPackage.js"></script>
-			<script src="js/fileManagement/fileManager.js"></script>
-			<!-- Load inline scripts and Kinomics NameSpace-->
 			<script src="js/general/wasInline.js"></script>
-			<script src="js/general/barcodeProto.js"></script>
-			<script src="js/qualityControl/qcDA.js"></script>
-			<script src="js/qualityControl/qcUI.js"></script>
+
 		</div>
 	</body>
 

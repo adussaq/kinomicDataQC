@@ -94,9 +94,10 @@ KINOMICS.workers = (function () {
 	createWorkerObj = function (start_obj) {
 		//Declare local vars
 		var clearWorkers, finishFunction, jobsArray, lib, setFinishFunction,
-			startJob, startWorkers, submitJob, post_callback, workersArr;
+			startJob, startWorkers, submitJob, post_callback, workersArr, onComplete;
 
 		//Define local vars
+		onComplete = function () {};
 		jobsArray = [];
 		lib = {};
 		workersArr = [];
@@ -122,7 +123,7 @@ KINOMICS.workers = (function () {
 			*/////////////////////////////////////////////////////////////////////////////////
 
 			//Run the actual program
-			run(setFinishFunction)(callback);
+			run(onComplete)(callback);
 		};
 
 		lib.submitJob = function (job, callback) {
@@ -200,6 +201,7 @@ KINOMICS.workers = (function () {
 			var callback, job, message, worker;
 
 			//Variable definitions
+			onComplete = setFinishFunction;
 			worker = workersArr[workerToStart][0];
 			workersArr[workerToStart][1] = true; //This is to make sure multiple jobs are not
 				//submitted
@@ -253,7 +255,15 @@ KINOMICS.workers = (function () {
 		(function () {
 			var callback, errorFunc, filename, numJobs, i;
 			//callback = start_obj.callback || function () {};
-			errorFunc = start_obj.onError !== undefined ? start_obj.onError : function (err) {reportError(err); };
+			errorFunc = start_obj.onError !== undefined ? function (err) {
+				start_obj.onError(err);
+				onComplete = function () {};
+				finishFunction = function () {};
+			} : function (err) {
+				reportError(err);
+				onComplete = function () {};
+				finishFunction = function () {};
+			};
 			numJobs = start_obj.num_workers !== undefined ? start_obj.num_workers : 4;
 			numJobs *= 1;
 				//Coerces into a number drops decimals if .000... 

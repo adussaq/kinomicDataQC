@@ -8,7 +8,7 @@ KINOMICS.qualityControl.UI = (function () {
 	//variable declarations
 	var barcodes, barContainer, barDiv, buttonRow, buttonWell, dataAnalysisObj,  fitCurvesBut, figureColumn, figureInfoColumn,
 		lib, loadingBarRow, qcBody, reportError, run, startNextPeptide, tableSpot, workerObj, sliderbar,
-		fitCurvesWorkersFile, optionsElem;
+		fitCurvesWorkersFile, optionsElem, fileManagerDA, fuse, S3DB;
 
 	//variable definitions
 	lib = {};
@@ -18,6 +18,9 @@ KINOMICS.qualityControl.UI = (function () {
 	dataAnalysisObj = KINOMICS.qualityControl.DA;
 	fitCurvesWorkersFile = 'js/qualityControl/fitCurvesWorker.js';
 	barcodes = KINOMICS.barcodes;
+	fileManagerDA = KINOMICS.fileManager.DA;
+	fuse = KINOMICS.fileManager.DA.fusionTables;
+	S3DB = KINOMICS.fileManager.DA.S3DB;
 
 	//local functions
 	reportError = function (err) {
@@ -54,7 +57,8 @@ KINOMICS.qualityControl.UI = (function () {
 		wellRow =  $('<div/>', {'class': "row"}).appendTo(qcTab);
 		tempElem = $('<div/>', {'class': "span12"}).appendTo(wellRow);
 		buttonWell = $('<div/>', {'class': "well"}).appendTo(tempElem).hide();
-		buttonRow = $('<div/>', {'class': "row"}).appendTo(buttonWell);
+		tempElem = $('<div/>', {'class': "row"}).appendTo(buttonWell);
+		buttonRow = $('<div/>', {'class': "span11"}).appendTo(tempElem);
 		$('<div/>', {'class': "row", html: "&nbsp;"}).appendTo(buttonWell); // for spacing...
 		loadingBarRow = $('<div/>', {'class': "row"}).appendTo(buttonWell);
 
@@ -73,8 +77,6 @@ KINOMICS.qualityControl.UI = (function () {
 		).appendTo(tempElem);
 		tempElem = $('<div/>', {id: 'collapseOpt', 'class': 'accordion-body collapse'}).appendTo(tempElem);
 		optionsElem = $('<div/>', {'class': 'accordion-inner'}).appendTo(tempElem);
-
-
 
 
 		//The place for the table, figures, and figure info
@@ -129,22 +131,33 @@ KINOMICS.qualityControl.UI = (function () {
 					run(update)();
 					lib.update = updateActive; // Turns update feature back on.
 					mainLib.QCtable.update();
+					mainLib.saveDataBut.update();
+					//TODO: update/create save button
 				}
 			});
 		};
 
 		update = function () {
-			var bw;
+			var bw, upd = 0;
 			element.button('complete');
+			//TODO: fix globals issue...
+			barcodes = KINOMICS.barcodes;
+			console.log('here...', barcodes);
 			for (bw in barcodes) {
 				if (barcodes.hasOwnProperty(bw)) {
+					console.log('cycling', bw);
 					$('#tempQCMessage').hide();
 					buttonWell.show();
 					if (barcodes[bw].db.fit === false) {
+						console.log('false indeed...');
 						element.button('reset');
 						element.unbind('click');
 						element.click(fitCurvesClick);
 						return;
+					} else if (!upd) {
+						mainLib.QCtable.update();
+						mainLib.saveDataBut.update();
+						upd += 1;
 					}
 				}
 			}
@@ -152,13 +165,13 @@ KINOMICS.qualityControl.UI = (function () {
 
 		//Actually create the element
 		//Create fit curves button
-		tempElem = $('<div/>', {'class': 'span3'}).appendTo(buttonRow);
+		// tempElem = $('<div/>', {'class': 'span3'}).appendTo(buttonRow);
 		element = $('<button/>', {
 			'class': 'btn btn-primary',
 			'data-loading-text': 'Fitting Data, this may take a while',
 			'data-complete-text': 'Curves have been fitted',
 			text: 'Fit Curves'
-		}).appendTo(tempElem);
+		}).appendTo(buttonRow);
 
 		//Creates the loading bar
 		tempElem = $('<div/>', {'class': 'span11'}).appendTo(loadingBarRow);
@@ -168,7 +181,60 @@ KINOMICS.qualityControl.UI = (function () {
 		return lib;
 	}(lib));
 
-/*	lib.optionsCol = (function () {
+	lib.saveDataBut = (function (mainLib) {
+		//variable declarations
+		var button, click, lib, update, loading;
+
+		//variable definitions
+		lib = {};
+		loading = false;
+
+		lib.update = function () {
+			//TODO: user docs, this updates the save data button
+			update();
+		};
+
+		click = function (evt) {
+			loading = true;
+			button.button('loading');
+			button.unbind('click');
+			//fileManagerDA.saveChanges(barcodes, options.currentDB);
+			//TODO: Deal with multiple options to save files to...
+			fileManagerDA.saveChanges(barcodes, fuse.saveBarcodes, function () {}, function () {
+				loading = false;
+				update();
+			});
+		};
+
+		update = function () {
+			var bar;
+			if (loading) {
+				return;
+			}
+			button.button('complete');
+			for (bar in barcodes) {
+				if (barcodes.hasOwnProperty(bar) && barcodes[bar].db.changed && !loading) {
+					button.button('reset');
+					button.click(click);
+				}
+			}
+		};
+
+		//Make element icon-upload
+		(function () {
+			button = $('<button />', {
+				'class': 'btn btn-primary pull-right',
+				'data-loading-text': 'Saving data, this may take a while',
+				'data-complete-text': 'All Data Saved',
+				text: 'Save Changes'
+			}).button('complete').appendTo(buttonRow);
+		}());
+
+		return lib;
+	}(lib));
+
+	//This will be for the option element when there are more options...
+	/*	lib.optionsCol = (function () {
 		//variable declartions
 		var lib;
 
@@ -263,10 +329,10 @@ KINOMICS.qualityControl.UI = (function () {
 				ind = i + tableStart;
 				if (ind < len) {
 					if (barArr[ind] === barSelected) {
-						html = '<b>' + barArr[ind] + '</b>';
+						html = '<b>' + barcodes[barArr[ind]].name + '</b>';
 						barInd = ind;
 					} else {
-						html = barArr[ind];
+						html = barcodes[barArr[ind]].name;
 					}
 					tableRows[0][i].html(html);
 					tableRows[0][i].data('barcodeWell', barArr[ind]);
@@ -351,7 +417,7 @@ KINOMICS.qualityControl.UI = (function () {
 			if (pepInd < pepL - 1) {
 				//normal
 				pepSelected = pepArr[pepInd + 1];
-				pepCurrentPage += (pepInd + 1) % idsPerPage ? 0 : 1;
+				pepCurrentPage = Math.floor((pepInd + 1) / idsPerPage) + 1;
 				pepRefresh();
 				mainLib.plots.update();
 			} else if (barInd < barL - 1) {
@@ -360,7 +426,7 @@ KINOMICS.qualityControl.UI = (function () {
 				$('<tr>').click(barClicked).data("barcodeWell", barSelected).click();
 				pepSelected = pepArr[0];
 				pepCurrentPage = 1;
-				barCurrentPage += (barInd + 1) % idsPerPage ? 0 : 1;
+				barCurrentPage = Math.floor((barInd + 1) / idsPerPage)  + 1;
 				barRefresh();
 				pepRefresh();
 				mainLib.plots.update();
@@ -380,7 +446,7 @@ KINOMICS.qualityControl.UI = (function () {
 			if (pepInd > 0) {
 				//normal
 				pepSelected = pepArr[pepInd - 1];
-				pepCurrentPage -= pepInd % idsPerPage ? 0 : 1;
+				pepCurrentPage = Math.floor((pepInd - 1) / idsPerPage) + 1;
 				pepRefresh();
 				mainLib.plots.update();
 			} else if (barInd > 0) {
@@ -389,7 +455,7 @@ KINOMICS.qualityControl.UI = (function () {
 				$('<tr>').click(barClicked).data("barcodeWell", barSelected).click();
 				pepSelected = pepArr[pepArr.length - 1];
 				pepCurrentPage = Math.floor(pepArr.length / 10) + 1;
-				barCurrentPage += barInd % idsPerPage ? 0 : 1;
+				barCurrentPage = Math.floor((barInd - 1) / idsPerPage) + 1;
 				barRefresh();
 				pepRefresh();
 				mainLib.plots.update();
@@ -449,7 +515,7 @@ KINOMICS.qualityControl.UI = (function () {
 
 			//Add the header
 			tempElem = $('<tr/>').appendTo(dataTable);
-			$('<th/>', {text: "UIDs"}).appendTo(tempElem); // was #tdbars
+			$('<th/>', {text: "Barcodes"}).appendTo(tempElem); // was #tdbars
 			$('<th/>', {text: "Peptides"}).appendTo(tempElem); // was #theadPep
 
 			//Add the rows
@@ -696,6 +762,7 @@ KINOMICS.qualityControl.UI = (function () {
 				point = chart.getSelection();
 				point = point[0];
 				barcodes[barcode].db.changed = true;
+				mainLib.saveDataBut.update(); // update save data button
 				data = barcodes[barcode].peptides[peptide][analysis];
 
 				//Change from good to bad
