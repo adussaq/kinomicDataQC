@@ -1,0 +1,352 @@
+# 
+# This describes the kinome namespace.
+# This file is for modeling rather than completeness
+# Lines that clutter the model have been commented out.
+#
+
+@prefix rdf:  <http://bit.ly/_rdf#> .
+@prefix rdfs: <http://bit.ly/_rdfs#> .
+@prefix kinome:  <http://bit.ly/kinomeNS#> .
+@prefix xsd: <http://bit.ly/_xsd#> .
+
+
+########################################
+################Classes#################
+########################################
+#kinome:Run rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "Run, these are visually identified with barcode_well" .
+
+#kinome:Operational rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "Operational parameters for a given run" .
+
+#kinome:Cycle_Series rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "Cycle series for a given peptide_well" .
+
+#kinome:Post_Wash rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "Post wash series for a given peptide_well" .
+
+#kinome:Bionavigator rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "This contains the Bionavigator Version and other notes" .
+
+#kinome:Machine rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "This describes the machine that was used to run the samples" .
+
+#kinome:Sample rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "This describes the sample that was ran" .
+
+#kinome:Run_Conditions rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "This describes treatment to the individual sample" .
+
+#kinome:Peptide_Well_Description rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "This describes the peptide/wells and their metadata (ie sequence of peptides in the well)" .
+
+#kinome:Peptide_Well rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: .
+#	rdfs:comment "This describes the actual peptide well used on the particular chip for that particular sample." .
+
+#kinome:Array rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: ;
+#	rdfs:comment "Group of properties as literal string, but actually Arrays" .
+
+kinome:Michaelis–Menten # rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: ;
+	kinome:equation "S = (y_max * v0 * (c - c0))/(y_max + v0 * (c - c0))" .
+#	rdfs:comment "Michaelis–Menten model used for fitting cycle series data" .
+
+kinome:Linear # rdf:type rdfs:Class .
+#	rdfs:isDefinedBy kinome: ;
+	kinome:equation "S = k * t + y0" .
+#	rdfs:comment "Linear model used for fitting post wash data" .
+
+
+########################################
+###########Linking properties###########
+########################################
+kinome:hasModel #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain
+		kinome:Cycle_Series ,
+		kinome:Post_Wash ;
+	rdfs:range
+		kinome:Michaelis–Menten ,
+		kinome:Linear .
+#	rdfs:comment "Links x/y data to the models that it has been fit to/worked on" .
+
+kinome:hasPeptide #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain
+		kinome:Run ,
+		kinome:Chip_Type ;
+	rdfs:range
+		kinome:Peptide_Well_Description ,
+		kinome:Peptide_Well .
+#	rdfs:comment "Adds a peptide to the aggregating class" .
+
+kinome:operationalParameters #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Run ;
+	rdfs:range kinome:Operational .
+#	rdfs:comment "Links operational parameters to run" .
+
+kinome:cycleData #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Peptide_Well ;
+	rdfs:range kinome:Cycle_Series .
+#	rdfs:comment "Links cycle data to peptide well information" .
+
+kinome:postWashData #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Peptide_Well ;
+	rdfs:range kinome:Post_Wash .
+#	rdfs:comment "Links Post wash data to peptide well information" .
+
+kinome:fromSample #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Run ;
+	rdfs:range kinome:Sample .
+#	rdfs:comment "Links run to sample" .
+
+kinome:hasRun #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Sample ;
+	rdfs:range kinome:Run .
+#	rdfs:comment "Links sample to run" .
+
+kinome:chipType #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Run ;
+	rdfs:range kinome:Chip_Type .
+#	rdfs:comment "Chip type used for run, for example tyrosine kinase chip" .
+
+kinome:bionavigatorVersion #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	#rdfs:subPropertyOf rdfs:comment ;
+	rdfs:domain kinome:Operational ;
+	rdfs:range kinome:Bionavigator .
+#	rdfs:comment "Version of Bionavigator Used to run the analysis" .
+
+kinome:machineName #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	#rdfs:subPropertyOf rdfs:comment ;
+	rdfs:domain kinome:Operational ;
+	rdfs:range kinome:Machine .
+#	rdfs:comment "Machine used to generate results" .
+
+
+########################################
+#########Non-linking properties#########
+########################################
+kinome:equation #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	#rdfs:subPropertyOf rdfs:comment ;
+	rdfs:domain 
+		kinome:Linear ,
+		kinome:Michaelis–Menten .
+#	rdfs:range xsd:string .
+#	rdfs:comment "Equation for a given model".
+
+kinome:version #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	#rdfs:subPropertyOf rdfs:comment ;
+	rdfs:domain kinome:Bionavigator .
+#	rdfs:range xsd:string .
+#	rdfs:comment "Date time represented as a string".
+
+kinome:dateTime #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	##rdfs:subPropertyOf rdfs:comment ;
+	rdfs:domain kinome:Run .
+#	rdfs:range xsd:string .
+#	rdfs:comment "Date time represented as a string".
+
+kinome:barcode #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	#rdfs:subPropertyOf rdfs:comment ;
+	rdfs:domain kinome:Run .
+#	rdfs:range xsd:string .
+#	rdfs:comment "Barcode for a particular run" .
+
+kinome:row #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	#rdfs:subPropertyOf rdfs:comment ;
+	rdfs:domain kinome:Run .
+#	rdfs:range xsd:string .
+#	rdfs:comment "Row for a particular run" .
+
+#kinome:name #rdf:type rdf:Property ;
+#	rdfs:isDefinedBy kinome: ;
+#	rdfs:subPropertyOf rdfs:label ;
+#	rdfs:domain 
+#		kinome:Run ,
+#		kinome:Chip_Type ,
+#		kinome:Sample ,
+#		kinome:Peptide_Well_Description ,
+#		kinome:Machine ,
+#		kinome:Peptide_Well .
+#	rdfs:range xsd:string .
+#	rdfs:comment "Standard Name of an object" .
+
+kinome:peptideSeq #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	#rdfs:subPropertyOf rdfs:comment ;
+	rdfs:domain kinome:Peptide_Well_Description .
+#	rdfs:range xsd:string .
+#	rdfs:comment "Sequence of the phosphoralable peptide in a peptide well" .
+
+kinome:lampPower #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Operational .
+#	rdfs:range xsd:float .
+#	rdfs:comment "Recorded lamp power" .
+
+kinome:lampReferencePower #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Operational .
+#	rdfs:range xsd:float .
+#	rdfs:comment "Recorded lamp power reference" .
+
+kinome:v0 #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Michaelis–Menten .
+#	rdfs:range xsd:float .
+#	rdfs:comment "Initial reaction rate for reaction time dependent records" .
+
+kinome:cycle0 #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Michaelis–Menten .
+#	rdfs:range xsd:float .
+#	rdfs:comment "Time zero for reaction time dependent records" .
+
+kinome:sigMax #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Michaelis–Menten .
+#	rdfs:range xsd:float .
+#	rdfs:comment "Projected maximum signal for reaction time dependent records" .
+
+kinome:R2 #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain 
+		kinome:Michaelis–Menten ,
+		kinome:Linear .
+#	rdfs:range xsd:float .
+#	rdfs:comment "Confidence of the goodness of fit" .
+
+kinome:k  #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Linear .
+#	rdfs:range xsd:float .
+#	rdfs:comment "Slope of exposure time dependent records" .
+
+kinome:exp0 #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Linear .
+#	rdfs:range xsd:float .
+#	rdfs:comment "y-intercept of exposure time dependent records" .
+
+kinome:x_location #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Peptide_Well_Description .
+#	rdfs:range xsd:interger .
+#	rdfs:comment "x location of well on peptide chip" .
+
+kinome:y_location #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Peptide_Well_Description .
+#	rdfs:range xsd:interger .
+#	rdfs:comment "y location of well on peptide chip" .
+
+
+########################################
+################Arrays##################
+########################################
+kinome:xVals #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain 
+		kinome:Linear ,
+		kinome:Michaelis–Menten .
+#	rdfs:range kinome:Array .
+#	rdfs:comment "Cycle numbers at which pictures were taken" .
+
+
+kinome:yVals #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain 
+		kinome:Linear ,
+		kinome:Michaelis–Menten .
+#	rdfs:range kinome:Array .
+#	rdfs:comment "Cycle numbers at which pictures were taken" .
+
+kinome:JSONstring #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Array .
+#	rdfs:range xsd:string .
+#	rdfs:comment "Describes the JSONified string of the array" .
+
+kinome:offest #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Array ;
+	rdfs:range rdfs:Literal .
+#	rdfs:comment "Group of properties that serve to indicate elements/offsets of an array" .
+
+kinome:oset0 #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdf:subPropertyOf kinome:offest .
+
+kinome:oset1 #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdf:subPropertyOf kinome:offest .
+
+kinome:oset2 #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdf:subPropertyOf kinome:offest .
+
+##As many more offsets as needed, trust human interp to order them
+
+kinome:cycleNumbers #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Operational .
+#	rdfs:range kinome:Array .
+#	rdfs:comment "Cycle numbers at which pictures were taken" .
+
+kinome:exposureTimes #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Operational .
+#	rdfs:range kinome:Array .
+#	rdfs:comment "Exposure time for post wash data" .
+
+kinome:cycleImages #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Operational .
+#	rdfs:range kinome:Array .
+#	rdfs:comment "Images for cycles, correspond to cycleNumbers" .
+
+kinome:pwImages #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain kinome:Operational .
+#	rdfs:range kinome:Array .
+#	rdfs:comment "Images for post wash, correspond to exposure times" .
+
+kinome:medSigMBack #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain
+		kinome:Post_Wash ,
+		kinome:Cycle_Series .
+#	rdfs:range kinome:Array .
+#	rdfs:comment "Actual measures of florecence at given times." .
+
+kinome:accurateData #rdf:type rdf:Property ;
+	#rdfs:isDefinedBy kinome: ;
+	rdfs:domain
+		kinome:Linear ,
+		kinome:Michaelis–Menten .
+#	rdfs:range kinome:Array .
+#	rdfs:comment "Determines if data points are accurate or represent a machine flaw" .

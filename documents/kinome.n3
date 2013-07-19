@@ -1,0 +1,117 @@
+# 
+# This is an example of the rdf structure for one run: Ruuid,
+# with two peptides: Puuid1, Puuid2, from the chip Cuuid, of 
+# the sample Suuid. Other uuids include: Operational [Ouuid],
+# Run_Conditions [RCuuid], Cycle_Series [CSuuid], Post_Wash
+# [PWuuid], and Peptide_Well_Description [PDuuid].
+#
+
+@prefix rdf:  <http://bit.ly/_rdf#> .
+@prefix rdfs: <http://bit.ly/_rdfs#> .
+@prefix kinome:  <http://bit.ly/kinomeNS#> .
+@prefix data: <http://bit.ly/kinomeData#> .
+
+#The following is all provided by data alone
+
+data:Ruuid 
+	rdf:type kinome:Run ;
+	kinome:dateTime "Date time" ;
+	kinome:barcode "01234" ;
+	kinome:row "1" ;
+	kinome:hasPeptide
+		data:Puuid1,
+		data:Puuid2 ;
+	kinome:operationalParameters data:Ouuid .
+
+data:Ouuid
+	rdf:type kinome:Operational ;
+	kinome:bionavigatorVersion "Version 2.0.0" ;
+	kinome:cycleNumbers (1, 2, 3, 4, 5) ;
+	kinome:exposureTimes (5, 10, 20, 50, 100, 200) ;
+	kinome:cycleImages ("http://www.example.com/images/image1", "http://www.example.com/images/image2", "http://www.example.com/images/image3", "http://www.example.com/images/image4", "http://www.example.com/images/image5") ;
+	kinome:pwImages ("http://www.example.com/images/image6", "http://www.example.com/images/image7", "http://www.example.com/images/image8", "http://www.example.com/images/image9", "http://www.example.com/images/image10", "http://www.example.com/images/image11") ;
+	kinome:lampPower 2E9 ;
+	kinome:lampReferencePower 2E9 ;
+	machineName: "kinomeMachine2EX" .
+
+data:Puuid1
+	rdf:type kinome:Peptide_Well ;
+	kinome:name "peptideName" ;
+	kinome:cycleData data:CSuuid1 ;
+	kinome:postWashData data:PWuuid1 .
+data:Puuid2
+	rdf:type kinome:Peptide_Well ;
+	kinome:name "peptideName" ;
+	kinome:cycleData data:CSuuid2 ;
+	kinome:postWashData data:PWuuid2 .
+
+data:CSuuid1
+	rdf:type kinome:Cycle_Series ;
+	kinome:medSigMBack (1.012, 2.022, 3.032, 4.042, 5.052) .
+data:CSuuid2
+	rdf:type kinome:Cycle_Series ;
+	kinome:medSigMBack (1.013, 2.023, 3.033, 4.043, 5.053) .
+
+data:PWuuid1
+	rdf:type kinome:Post_Wash ;
+	kinome:medSigMBack (1.016, 2.026, 3.036, 4.046, 5.056, 6.066) .
+data:PWuuid2
+	rdf:type kinome:Post_Wash ;
+	kinome:medSigMBack (1.017, 2.027, 3.037, 4.047, 5.057, 6.067) .
+
+#Following this data is added programmatically by analysis of data
+
+data:CSuuid1
+	kinome:accurateData (true, true, true, true, true) ;
+	kinome:v0 2.3 ;
+	kinome:cycle0 10.0 ;
+	kinome:sigMax 3000 ;
+	kinome:R2 0.950 .
+data:CSuuid2
+	kinome:accurateData (true, true, true, true, true) ;
+	kinome:v0 9.7 ;
+	kinome:cycle0 15 ;
+	kinome:sigMax 2010 ;
+	kinome:R2 0.930 .
+
+data:PWuuid1
+	kinome:accurateData (true, true, true, true, true, true) ;
+	kinome:k 1.0 ;
+	kinome:exp0 10.1 ;
+	kinome:R2 0.901 .
+
+data:PWuuid2
+	kinome:accurateData (true, true, true, true, true, true) ;
+	kinome:k 1.01 ;
+	kinome:exp0 10.11 ;
+	kinome:R2 0.9011 .
+
+#Following data is added with enrichment files/programmatic assumptions
+
+data:Ruuid 
+	kinome:fromSample data:Suuid ;
+	kinome:chipType data:Cuuid ;
+
+data:Puuid1 rdfs:subClassOf data:PDuuid1 .
+data:Puuid2 rdfs:subClassOf data:PDuuid1 .
+
+data:Cuuid
+	kinome:hasPeptide
+		PDuuid1 ,
+		PDuuid2 ;
+	kinome:name "Tyrosine Kinase Chip" .
+
+data:Suuid
+	kinome:name "GBS10.201" ;
+
+data:PDuuid1
+	kinome:x_location 1 ;
+	kinome:y_location 1 ;
+	kinome:peptideSeq "XXXYXXX" .
+
+data:PDuuid2
+	kinome:x_location 2 ;
+	kinome:y_location 1 ;
+	kinome:peptideSeq "XXXYXXX" .
+
+
