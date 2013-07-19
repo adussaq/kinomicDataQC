@@ -1,0 +1,191 @@
+# 
+# This is an example of the rdf structure for one run: Ruuid,
+# with two peptides: Puuid1, Puuid2, from the chip Cuuid, of 
+# the sample Suuid. Other uuids include: Operational [Ouuid],
+# Run_Conditions [RCuuid], Cycle_Series [CSuuid], Post_Wash
+# [PWuuid], Peptide_Well_Description [PDuuid], Machine Name
+# [Muuid], Bionavigator version [BNuuid], Linear model [Luuid],
+# Post wash M-M model [MMuuid], finally all 'arrays' [Auuid]. 
+# Auuid's have a series of properties, a JSON string of the
+# data and represented as triples oset0, oset1, oset2... This
+# representation is left out for model clarity. Typing of 
+# Arrays is removed for clarity of figures, as is ...
+#
+
+@prefix rdf:  <http://bit.ly/_rdf#> .
+@prefix rdfs: <http://bit.ly/_rdfs#> .
+@prefix kinome:  <http://bit.ly/kinomeNS#> .
+@prefix data: <http://bit.ly/kinomeData#> .
+
+#The following is all provided by data alone
+
+data:Ruuid 
+	rdf:type kinome:Run ;
+	kinome:dateTime "Date time" ;
+	kinome:barcode "01234" ;
+	kinome:row "1" ;
+	kinome:hasPeptide
+		data:Puuid1,
+		data:Puuid2 ;
+	kinome:operationalParameters data:Ouuid .
+
+data:Ouuid
+	rdf:type kinome:Operational ;
+	kinome:bionavigatorVersion "Version 2.0.0" ;
+	kinome:cycleNumbers data:Auuid1 ;
+	kinome:exposureTimes data:Auuid2 ;
+	kinome:cycleImages data:Auuid3;
+	kinome:pwImages data:Auuid4 ;
+	kinome:lampPower 2E9 ;
+	kinome:lampReferencePower 2E9 ;
+	kinome:machineName "kinomeMachine2EX" .
+
+data:Auuid1
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[1, 2, 3, 4, 5]" .
+data:Auuid2
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[5, 10, 20, 50, 100, 200]" .
+data:Auuid3
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "['image1.com', 'image2.com', 'image3.com', 'image4.com', 'image5.com']" .
+data:Auuid4
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "['image6.com', 'image7.com', 'image8.com', 'image9.com', 'image10.com', 'image11.com']" .
+
+data:Puuid1
+	rdf:type kinome:Peptide_Well ;
+	kinome:name "peptideName1" ;
+	kinome:cycleData data:CSuuid1 ;
+	kinome:postWashData data:PWuuid1 .
+data:Puuid2
+	rdf:type kinome:Peptide_Well ;
+	kinome:name "peptideName2" ;
+	kinome:cycleData data:CSuuid2 ;
+	kinome:postWashData data:PWuuid2 .
+
+data:CSuuid1
+	rdf:type kinome:Cycle_Series ;
+	kinome:medSigMBack data:Auuid5 .
+data:CSuuid2
+	rdf:type kinome:Cycle_Series ;
+	kinome:medSigMBack data:Auuid6 .
+
+data:Auuid5
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[1.012, 2.022, 3.032, 4.042, 5.052]" .
+data:Auuid6
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[1.013, 2.023, 3.033, 4.043, 5.053]" .
+
+data:PWuuid1
+	rdf:type kinome:Post_Wash ;
+	kinome:medSigMBack data:Auuid7 .
+data:PWuuid2
+	rdf:type kinome:Post_Wash ;
+	kinome:medSigMBack data:Auuid8 .
+
+data:Auuid7
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[1.016, 2.026, 3.036, 4.046, 5.056, 6.066]" .
+data:Auuid8
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[1.017, 2.027, 3.037, 4.047, 5.057, 6.067]" .
+
+#Following this data is added programmatically by analysis of data
+
+data:CSuuid1 kinome:hasModel data:MMuuid1 .
+data:CSuuid2 kinome:hasModel data:MMuuid2 .
+
+data:MMuuid1
+	rdf:type kinome:Michaelis–Menten ;
+	kinome:accurateData data:Auuid9 ;
+	kinome:xVals data:Auuid1 ;
+	kinome:yVals data:Auuid5 ;
+	kinome:v0 2.3 ;
+	kinome:cycle0 10.0 ;
+	kinome:sigMax 3000 ;
+	kinome:R2 0.950 .
+
+data:MMuuid2
+	kinome:accurateData data:Auuid10 ;
+	kinome:xVals data:Auuid1 ;
+	kinome:yVals data:Auuid6 ;
+	kinome:v0 9.7 ;
+	kinome:cycle0 15 ;
+	kinome:sigMax 2010 ;
+	kinome:R2 0.930 .
+
+data:Auuid9
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[true, true, true, true, true]" .
+data:Auuid10
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[false, true, true, true, true]" .
+
+data:PWuuid1 kinome:hasModel data:Luuid1 .
+data:PWuuid2 kinome:hasModel data:Luuid2 .
+
+data:Luuid1
+	kinome:accurateData data:Auuid11 ;
+	kinome:xVals data:Auuid2 ;
+	kinome:yVals data:Auuid7 ;
+	kinome:k 1.0 ;
+	kinome:exp0 10.1 ;
+	kinome:R2 0.901 .
+
+data:Luuid2
+	kinome:accurateData data:Auuid12 ;
+	kinome:xVals data:Auuid2 ;
+	kinome:yVals data:Auuid8 ;
+	kinome:k 1.01 ;
+	kinome:exp0 10.11 ;
+	kinome:R2 0.9011 .
+
+data:Auuid11
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[true, true, true, true, true, true]" .
+data:Auuid12
+#	rdf:type kinome:Array ;
+	kinome:JSONstring "[false, true, true, true, true, true]" .
+
+#Following data is added with enrichment files/programmatic assumptions
+
+data:Ouuid
+	kinome:machineName data:Muuid ;
+	kinome:bionavigatorVersion data:BNuuid .
+data:BNuuid
+	rdf:type kinome:Bionavigator ;
+	kinome:name "Version 2.0.0" .
+data:Muuid
+	rdf:type kinome:Machine ;
+	kinome:name "kinomeMachine2EX" .
+
+data:Ruuid 
+	kinome:fromSample data:Suuid ;
+	kinome:chipType data:Cuuid .
+
+data:Puuid1 rdfs:subClassOf data:PDuuid1 .
+data:Puuid2 rdfs:subClassOf data:PDuuid2 .
+
+data:Cuuid
+	kinome:hasPeptide
+		data:PDuuid1 ,
+		data:PDuuid2 ;
+	kinome:name "Tyrosine Kinase Chip" .
+
+data:Suuid kinome:name "GBS10.201" .
+
+data:PDuuid1
+	rdf:type kinome:Peptide_Well_Description ; 
+	kinome:x_location 3 ;
+	kinome:y_location 3 ;
+	kinome:peptideSeq "XXXYXXX" .
+
+data:PDuuid2
+	rdf:type kinome:Peptide_Well_Description ;
+	kinome:x_location 2 ;
+	kinome:y_location 2 ;
+	kinome:peptideSeq "CCCYCCC" .
+
+
